@@ -25,18 +25,13 @@
     }
 </style>
 
-<h2 class="text-center">{%= __("QR Code") %}</h2>
 
-<table class="no-border">
-	
-	<tbody>
-		<tr>
-		<div class="row items" style="margin-top: 40px">
-		{% for(var i=0, l=data.length; i<l; i++) { %}
+{% for(var i=0, l=data.length; i<l; i++) { %}
 			
 				
-				<td style="width:85px">   
-					
+var serial_qr_code = {%=data[i][__("Serial_QR_Code")]%}
+var serial_number = {%= data[i][__("Serial Number")] %}
+var item_code = {%= data[i][__("Item Code")]
 
 ^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR2,2~SD15^JUS^LRN^CI0^XZ
 ^XA
@@ -47,23 +42,16 @@
 ^FT194,301^BQN,2,8
 ^FH\^FDMA,fghjnkl;kjhgf^FS
 ^BY4,3,160^FT576,39^BCR,,Y,N
-^FD>;{%=data[i][__("Serial_QR_Code")]%}^FS
-^FT433,43^A0R,28,28^FH\^FD{%= data[i][__("Serial Number")] %}^FS
-^FT491,39^A0R,28,28^FH\^FD{%= data[i][__("Item Code")]^FS
+^FD>;serial_qr_code^FS
+^FT433,43^A0R,28,28^FH\^FD + serial_number + ^FS
+^FT491,39^A0R,28,28^FH\^FD + item_code ^FS
 ^PQ1,0,1,Y^XZ
 								
-				{% if(i%2) { %}
-										
-					</tr>
-					<tr>
-
-				{% } %}
-			    
+							    
 
 							
 		{% } %}
-	</tbody>
-</table>
+	
 <p class="text-right text-muted">Printed On {%= dateutil.str_to_user(dateutil.get_datetime_as_string()) %}</p>
 
 
