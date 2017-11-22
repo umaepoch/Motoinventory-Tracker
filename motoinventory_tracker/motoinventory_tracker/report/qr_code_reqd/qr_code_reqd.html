@@ -1,28 +1,48 @@
-^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR2,2~SD15^JUS^LRN^CI0^XZ
-^XA
-^MMT
-^PW812
-^LL0406
-^LS0
+{% extends "templates/web.html" %}
+{% from "erpnext/templates/includes/order/order_macros.html" import item_name_and_description %}
 
-{% for(var i=0, l=data.length; i<l; i++) { %}
+{% block breadcrumbs %}
+	{% include "templates/includes/breadcrumbs.html" %}
+{% endblock %}
+
+{% block title %}{{ doc.name }}{% endblock %}
+
+{% block header %}
+	<h1>{{ doc.name }}</h1>
+{% endblock %}
+
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HTTP Post Sample</title>
+  <link rel="stylesheet" href="./ZCloudDemo.css" />
+</head>
+<body onload="loaded();">
+
+<script>
+
+print_label;
+/****************************************************************************
+Demo Printing functions
+****************************************************************************/
+
+<div>
+    {% for(var i=0, l=data.length; i<l; i++) %}
 			
-				
-var serial_qr_code = {%= data[i][__("Serial_QR_Code")]%}
-var serial_number = {%= data[i][__("Serial Number")] %}
-var item_code = {%= data[i][__("Item Code")]
-
-
-﻿
-^FT194,301^BQN,2,8
-^FH\^FDMA,fghjnkl;kjhgf^FS
-^BY4,3,160^FT576,39^BCR,,Y,N
-^FD>;234567^FS
-^FT433,43^A0R,28,28^FH\^FD{VAR2}^FS
-^FT491,39^A0R,28,28^FH\^FD{VAR1}^FS
-^PQ1,0,1,Y^XZ
-								
-							    
+		var serial_number = data[i].serial_number;
+					
+		var item_code = data[i].item_code;
+		var zpl = "^XA^PW600^LL400^PON^FO100,100^A0N,50,50^FD" + serial_number + "^FS^FO170,260^A0N,50,50^FB380,1,20,C,0^FD" + item_code + "^FS^FO70,200^BQN,2,3^FDQA,^GB550,350,2,B,2^XZ"; 
+		{{ zpl }}
 			
-{% } %}
+		
+    {% endfor %}
 
+</div>
+
+  </script>
+</body>
+</html>
