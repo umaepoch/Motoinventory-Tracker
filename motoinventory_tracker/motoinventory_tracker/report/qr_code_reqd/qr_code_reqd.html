@@ -32,10 +32,10 @@
 <table class="no-border">
 	
 	<tbody>
-		<tr>
+		
 		<div class="row items" style="margin-top: 40px">
 		{% for(var i=0, l=data.length; i<l; i++) { %}
-			
+			<tr>
 				<td style="width:85px">   
 					
 					<img src={%=data[i][__("Serial_QR_Code")]%} width = "75.59px" height = "75px">
@@ -45,7 +45,7 @@
 					<br>{%= data[i][__("Item Code")] %}
 					<br>
 					<br></td>
-				
+				</tr>
 							
 		{% } %}
 	</tbody>
