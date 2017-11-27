@@ -31,9 +31,11 @@
 
         <tbody>
                 <tr>
-                {% var zpl_head = "^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR2,2~SD15^JUS^LRN^CI0^XZ" %}
-                {{ zpl_head }}
-                {% var zpl_head2 = "^XA^MMT^PW812^LL0406^LS0" %}
+                {% var zpl_head = "^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA %}
+                {{ zpl_head }} 
+		{% var zpl_head2 = "^PR2,2~SD15^JUS^LRN^CI0^XZ" %}
+		{{ zpl_head2 }}
+                {% var zpl_head3 = "^XA^MMT^PW812^LL0406^LS0" %}
 
                 </tr>
                <div class="row items" style="margin-top: 40px">
@@ -41,7 +43,7 @@
                         <tr>
                                 <td style="width:85px">
 
-					{{ zpl_head2 }}
+					{{ zpl_head3 }}
                                         {% var serial_number = data[i][__("Serial Number")] %}
                                         {% var item_code = data[i][__("Item Code")] %}
                                        
