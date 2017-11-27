@@ -46,13 +46,15 @@
                                         {% var serial_number = data[i][__("Serial Number")] %}
                                         {% var item_code = data[i][__("Item Code")] %}
                                        
-                                        {% var zpl = "^FT70,200^A0N,20,20^FH\^FD" + serial_number + "^FS" %}
+
+                                        {% var zpl = "^FT250,79^A0R,28,28^FH\^FD" + serial_number + "^FS" %}
                                         {{ zpl }}
-					{% var zpl2 = "^FT10,23^A0N,20,20^FH\^FD" + item_code + "^FS" %}
+					{% var zpl2 = "^FT533,53^A0R,28,28^FH\^FD" + item_code + "^FS" %}
                                         {{ zpl2 }}
 
-                                        {% var zpl3 = "^FT100,150^BQN,4,4^FH\^FDMA" + serial_number +"^FS^XZ" %}
+                                        {% var zpl3 = "^FT300,301^BQN,2,8^FH\^FDMA" + serial_number +"^FS" %}
                                         {{ zpl3 }}
+					{% var zpl4 = "^PQ1,0,1,Y^XZ" %}
                                         <br>
                                         <br></td>
                                    </tr>
