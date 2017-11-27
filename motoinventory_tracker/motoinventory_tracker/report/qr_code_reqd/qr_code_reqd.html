@@ -33,7 +33,7 @@
 
 		<tr>
 		
-                {% var zpl_head = "^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA %}
+                {% var zpl_head = "^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA" %}
                 {{ zpl_head }} 
 		</tr>
 		<tr>
@@ -56,6 +56,13 @@
 
                                         {% var zpl = "^FT250,79^A0R,28,28^FH\^FD" + serial_number + "^FS" %}
                                         {{ zpl }} 
+				        {% var zpl2 = "^FT533,53^A0R,28,28^FH\^FD" + item_code + "^FS" %}
+                                        {{ zpl2 }} 
+
+                                        {% var zpl3 = "^FT300,301^BQN,2,8^FH\^FDMA" + serial_number +"^FS" %}
+                                        {{ zpl3 }} 
+					{% var zpl4 = "^PQ1,0,1,Y^XZ" %}
+					{{ zpl4 }} 
 					
                                         
 				</td>
