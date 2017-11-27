@@ -1,29 +1,55 @@
 <style>
+
     .print-format table, .print-format tr,
+
     .print-format td, .print-format div, .print-format p {
+
         font-family: Monospace;
+
         line-height: 100%;
+
         vertical-align: middle;
+
     }
+
     @media screen {
+
         .print-format {
+
             width: 33.1in;
+
             padding: 0.25in;
+
             min-height: 46.8<style>
+
     .print-format table, .print-format tr,
+
     .print-format td, .print-format div, .print-format p {
+
         font-family: Monospace;
+
         line-height: 200%;
+
         vertical-align: middle;
+
     }
+
     @media screen {
+
         .print-format {
+
             width: 33.8in;
+
             padding: 0.25in;
+
             min-height: 46.8in;
+
         }
+
     }
+
 </style>
+
 
 <table class="no-border">
 	
@@ -35,11 +61,11 @@
 		{% var zpl_head2 = "^PR2,2~SD15^JUS^LRN^CI0^XZ" %}
 		{{ zpl_head2 }} <br>
                 {% var zpl_head3 = "^XA^MMT^PW812^LL0406^LS0" %}
-
+		</tr>
                
 		<div class="row items" style="margin-top: 40px">
 		 {% for(var i=0, l=data.length; i<l; i++) { %}
-					
+			<tr>		
 				<td style="width:85px"> 
 
 
@@ -60,9 +86,10 @@
                                         <br>
                                         <br>
 				</td>
+			</tr>
 
                 {% } %}
-		</div>
-		</tr>
+		
+
 	</tbody>
 </table>
