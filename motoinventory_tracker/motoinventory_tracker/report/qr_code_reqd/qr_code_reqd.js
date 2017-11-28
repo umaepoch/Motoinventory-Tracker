@@ -18,4 +18,5 @@ frappe.query_reports["QR Code Reqd"] = {
 		}
 		
 	]
+
 }

@@ -4,10 +4,17 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _, msgprint
-from frappe.utils import flt, getdate, formatdate
 from datetime import datetime, timedelta
+from frappe.utils import flt, getdate, datetime,comma_and
+from collections import defaultdict
+import frappe
+import json
+import time
+import math
+import ast
 
 def execute(filters=None):
+	global summ_data
         if not filters: filters = {}
 
         columns = get_columns()
@@ -15,7 +22,8 @@ def execute(filters=None):
         iwb_map = get_item_map(filters)
 
         data = []
-        summ_data = [] 
+        
+	summ_data = []
 	diff_data = 0	
 
         for (item_code, serial_number) in sorted(iwb_map):
@@ -102,5 +110,6 @@ def get_item_map(filters):
 		
      
         return iwb_map
+
 
 
