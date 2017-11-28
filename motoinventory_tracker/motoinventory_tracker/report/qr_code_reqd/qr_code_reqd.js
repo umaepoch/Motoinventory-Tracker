@@ -15,6 +15,13 @@ frappe.query_reports["QR Code Reqd"] = {
 			"label": __("Created Date To"),
 			"fieldtype": "Date",
 			"reqd": 1
+		},
+		{
+			"fieldname":"number_labels",
+			"label": __("Number of Labels"),
+			"fieldtype": "Data",
+			"default": 1,
+			"reqd": 1
 		}
 		
 	]

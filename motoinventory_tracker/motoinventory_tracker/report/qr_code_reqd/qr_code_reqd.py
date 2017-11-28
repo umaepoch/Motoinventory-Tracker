@@ -38,12 +38,13 @@ def execute(filters=None):
 		created_date = getdate(rows[6])
 		created_from = getdate(filters.get("created_from"))
 		created_to = getdate(filters.get("created_to"))
+		number_labels = filters.get("number_labels")
 		if ((created_date >= created_from) and (created_date <= created_to)):
 			string_qr = "http://www.barcodes4.me/barcode/qr/myfilename.png?value=" + rows[0]
 
 		
 			summ_data.append([rows[0], rows[1],rows[2],
-		 	rows[3], rows[4], rows[5], rows[6], string_qr
+		 	rows[3], rows[4], rows[5], rows[6], number_labels
 				
 			]) 
 						 
@@ -61,7 +62,7 @@ def get_columns():
 		_("Delivery Required On")+"::100",
 		_("Vehicle Status")+"::100",
 		_("Creation Date")+":Date:100",
-		_("Serial_QR_Code")+"::10"
+		_("Number of labels")+"::10"
 		
          ]
 
