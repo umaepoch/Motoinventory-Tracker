@@ -12,12 +12,9 @@ import json
 import time
 import math
 import ast
-import os.path
 
 def execute(filters=None):
 	global summ_data
-	global data
-	summ_data = []
         if not filters: filters = {}
 
         columns = get_columns()
@@ -26,6 +23,7 @@ def execute(filters=None):
 
         data = []
         
+	summ_data = []
 	diff_data = 0	
 
         for (item_code, serial_number) in sorted(iwb_map):
@@ -113,26 +111,6 @@ def get_item_map(filters):
 		
      
         return iwb_map
-
-
-@frappe.whitelist()
-def make_text(args):
-
-	frappe.msgprint(_("Inside Text"))
-	save_path = 'site1.local/private/files'
-	file_name = os.path.join(save_path, "qrcode.txt")
-	f= open(file_name,"w+")
-
-	f.write("^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA")
-	f.write("^PR2,2~SD15^JUS^LRN^CI0^XZ")
-	f.write("^XA^MMT^PW812^LL0406^LS0")
-	for rows in summ_data:	
-		f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows[0]))
-		f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows[1]))
-		f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows[0]))
-		f.write("^PQ1,0,1,Y^XZ")
-
-	f.close()		
 
 
 
