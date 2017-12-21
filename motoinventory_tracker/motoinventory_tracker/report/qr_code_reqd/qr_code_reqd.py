@@ -17,6 +17,7 @@ import os.path
 def execute(filters=None):
 	global summ_data
 	global data
+	global number_labels
 	summ_data = []
         if not filters: filters = {}
 
@@ -35,14 +36,15 @@ def execute(filters=None):
                         
                     ])
 
+	number_labels = filters.get("number_labels")
 	for rows in data: 
 
 		created_date = getdate(rows[6])
 		created_from = getdate(filters.get("created_from"))
 		created_to = getdate(filters.get("created_to"))
-		number_labels = filters.get("number_labels")
+	
 		if ((created_date >= created_from) and (created_date <= created_to)):
-			string_qr = "http://www.barcodes4.me/barcode/qr/myfilename.png?value=" + rows[0]
+#			string_qr = "http://www.barcodes4.me/barcode/qr/myfilename.png?value=" + rows[0]
 
 		
 			summ_data.append([rows[0], rows[1],rows[2],
@@ -118,8 +120,7 @@ def get_item_map(filters):
 @frappe.whitelist()
 def make_text(args):
 
-	frappe.msgprint(_("Inside Text"))
-	save_path = 'site1.local/private/files'
+	save_path = 'site1.local/public/files'
 	file_name = os.path.join(save_path, "qrcode.txt")
 	f= open(file_name,"w+")
 
@@ -127,11 +128,15 @@ def make_text(args):
 	f.write("^PR2,2~SD15^JUS^LRN^CI0^XZ")
 	f.write("^XA^MMT^PW812^LL0406^LS0")
 	for rows in summ_data:	
-		f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows[0]))
-		f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows[1]))
-		f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows[0]))
-		f.write("^PQ1,0,1,Y^XZ")
 
+#		number_labels = int(number_labels)
+		nol = int(number_labels) + 1
+		for x in xrange(1, nol):
+			f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows[0]))
+			f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows[1]))
+			f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows[0]))
+			f.write("^PQ1,0,1,Y^XZ")
+	frappe.msgprint(_("Text File created - Please check 35.164.49.160/files/qrcode.txt"))
 	f.close()		
 
 
