@@ -125,7 +125,7 @@ def get_item_map(filters):
 def make_text(args):
 	frappe.msgprint(_("Hello"))
 
-	save_path = '35.164.49.160/files'
+	save_path = 'site1.local/public/files'
 	file_name = os.path.join(save_path, "qrcode.txt")
 	f= open(file_name,"w+")
 
@@ -148,8 +148,8 @@ def make_text(args):
 
 	frappe.msgprint(_('Beginning file download with wget module'))
 #    	url = 'http://localhost:8000/proman/public/files/qrcode.txt' 
-    	os.system("cp 35.164.49.160/files/qrcode.txt /home/uma/Downloads/qrcode.txt")
-	os.system("rm 35.164.49.160/files/qrcode.txt")
+    	os.system("cp site1.local/public/files/qrcode.txt /home/uma/Downloads/qrcode.txt")
+	os.system("rm site1.local/public/files/qrcode.txt")
     	frappe.msgprint(_('File downloaded'))
 #	with open("proman/private/files/qrcode.txt", "r+b") as fileobj:
 #		filedata = fileobj.read()
