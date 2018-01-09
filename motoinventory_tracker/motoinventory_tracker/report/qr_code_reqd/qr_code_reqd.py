@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 # License: GNU General Public License v3. See license.txt
 
@@ -13,6 +14,11 @@ import time
 import math
 import ast
 import os.path
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+print sys.getdefaultencoding()
 
 def execute(filters=None):
 	global summ_data
@@ -44,9 +50,7 @@ def execute(filters=None):
 		created_to = getdate(filters.get("created_to"))
 	
 		if ((created_date >= created_from) and (created_date <= created_to)):
-#			string_qr = "http://www.barcodes4.me/barcode/qr/myfilename.png?value=" + rows[0]
-
-		
+#					
 			summ_data.append([rows[0], rows[1],rows[2],
 		 	rows[3], rows[4], rows[5], rows[6], number_labels
 				
@@ -119,8 +123,9 @@ def get_item_map(filters):
 
 @frappe.whitelist()
 def make_text(args):
+	frappe.msgprint(_("Hello"))
 
-	save_path = 'site1.local/public/files'
+	save_path = '35.164.49.160/files'
 	file_name = os.path.join(save_path, "qrcode.txt")
 	f= open(file_name,"w+")
 
@@ -129,15 +134,28 @@ def make_text(args):
 	f.write("^XA^MMT^PW812^LL0406^LS0")
 	for rows in summ_data:	
 
-#		number_labels = int(number_labels)
+##		number_labels = int(number_labels)
 		nol = int(number_labels) + 1
 		for x in xrange(1, nol):
 			f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows[0]))
 			f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows[1]))
 			f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows[0]))
 			f.write("^PQ1,0,1,Y^XZ")
-	frappe.msgprint(_("Text File created - Please check 35.164.49.160/files/qrcode.txt"))
-	f.close()		
+#	frappe.msgprint(_("Text File created - Please check 35.164.49.160/files/qrcode.txt"))
+	f.close()
+	frappe.msgprint(_("Executing the below:"))
+#	frappe.local.response.filename = "qrcode.txt"
 
+	frappe.msgprint(_('Beginning file download with wget module'))
+#    	url = 'http://localhost:8000/proman/public/files/qrcode.txt' 
+    	os.system("cp 35.164.49.160/files/qrcode.txt /home/uma/Downloads/qrcode.txt")
+	os.system("rm 35.164.49.160/files/qrcode.txt")
+    	frappe.msgprint(_('File downloaded'))
+#	with open("proman/private/files/qrcode.txt", "r+b") as fileobj:
+#		filedata = fileobj.read()
+#	frappe.logger().debug("Inside") 
+#	frappe.local.response.filecontent = filedata
+#	frappe.local.response.type = "download"	
+#	frappe.utils.file_manager.download_file("localhost:8000/proman/private/files/qrcode.txt")
 
 
