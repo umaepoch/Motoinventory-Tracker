@@ -148,7 +148,7 @@ def make_text(args):
 
 	frappe.msgprint(_('Beginning file download with wget module'))
 #    	url = 'http://localhost:8000/proman/public/files/qrcode.txt' 
-    	os.system("cp site1.local/public/files/qrcode.txt /home/uma/Downloads/qrcode.txt")
+    	os.system("cp site1.local/public/files/qrcode.txt c:/Uma/Epoch/qrcode.txt")
 #	os.system("rm site1.local/public/files/qrcode.txt")
     	frappe.msgprint(_('File downloaded'))
 #	with open("proman/private/files/qrcode.txt", "r+b") as fileobj:
