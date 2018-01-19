@@ -642,7 +642,7 @@ def make_text_file(frm):
 
 	curr_date = utils.today()
 	fname = "qrcode"+curr_date+".csv"
-	save_path = 'proman/private/files'
+	save_path = 'site1.local/private/files'
 	file_name = os.path.join(save_path, fname)
 	ferp = frappe.new_doc("File")
 	ferp.file_name = fname

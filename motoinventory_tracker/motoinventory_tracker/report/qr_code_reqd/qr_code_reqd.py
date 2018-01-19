@@ -200,7 +200,7 @@ def make_text_file(frm):
 def make_text(args):
 	curr_date = utils.today()
 	fname = "qrcode"+curr_date+".csv"
-	save_path = 'proman/private/files'
+	save_path = 'site1.local/private/files'
 	file_name = os.path.join(save_path, fname)
 	ferp = frappe.new_doc("File")
 	ferp.file_name = fname
@@ -241,7 +241,7 @@ def download_file():
 	frappe.response.filename = "qrcode.txt"
 	response.mimetype = 'text/plain'
 	response.charset = 'utf-8'
-	with open("proman/public/files/qrcode.txt", "rb") as fileobj:
+	with open("site1.local/public/files/qrcode.txt", "rb") as fileobj:
 		filedata = fileobj.read()
 	print("Created Filedata")
 	frappe.response.filecontent = filedata
