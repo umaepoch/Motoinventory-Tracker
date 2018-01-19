@@ -2,8 +2,13 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _, msgprint
+
+import os.path
+import sys
+
+from frappe import _, msgprint, utils
 from frappe.utils import flt, getdate, datetime
+from werkzeug.wrappers import Response
 
 @frappe.whitelist()
 def validate_serial_no(serial_no):
@@ -627,3 +632,57 @@ def submit_sales_invoice(serial_no):
 	else:
 		returnmsg = """Sales Invoice for the vehicle with Serial No {sln} could not be found and submitted""".format(sln=serial_no).encode('ascii')
 	return returnmsg
+
+@frappe.whitelist()
+def make_text_file(frm):
+	frappe.msgprint(_("Inside"))
+	qr_record = frappe.get_doc("QR Code", frm)
+
+	qr_items = frappe.db.sql("""select qri.serial_number as serial_number, qri.item_code as item_code from `tabQR Code` qr, `tabQR Code Item` qri where qri.parent = %s and qr.name = qri.parent and qri.print_qr = '1'""" , (qr_record.name), as_dict=1)
+
+	curr_date = utils.today()
+	fname = "qrcode"+curr_date+".csv"
+	save_path = 'proman/private/files'
+	file_name = os.path.join(save_path, fname)
+	ferp = frappe.new_doc("File")
+	ferp.file_name = fname
+	ferp.folder = "Home"
+	ferp.is_private = 1
+	ferp.file_url = "/private/files/"+fname
+
+	f= open(file_name,"w+")
+
+	f.write("^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA")
+	f.write("^PR2,2~SD15^JUS^LRN^CI0^XZ")
+	f.write("^XA^MMT^PW812^LL0406^LS0")
+	number_labels = qr_record.number_of_labels
+	for rows in qr_items:	
+##		number_labels = int(number_labels)
+		nol = int(number_labels) + 1
+		for x in xrange(1, nol):
+			f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows.serial_number))
+			f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows.item_code))
+			f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows.serial_number))
+			f.write("^PQ1,0,1,Y^XZ")
+	frappe.msgprint(_("Text File created - Please check File List to download the file"))
+	ferp.save()
+	f.close()
+
+#	print("Inside Download")
+#	response = Response()
+#	filename = "qrcode.txt"
+#	frappe.response.filename = "qrcode2018-01-19.txt"
+#	response.mimetype = 'text/plain'
+#	response.charset = 'utf-8'
+#	with open("proman/private/files/qrcode2018-01-19.txt", "rb") as fileobj:
+#		filedata = fileobj.read()
+#	print("Created Filedata")
+#	frappe.response.filecontent = filedata
+#	print("Created Filecontent")
+#	response.type = "download"
+#	response.headers[b"Content-Disposition"] = ("filename=\"%s\"" % frappe.response['filename'].replace(' ', '_')).encode("utf-8")
+#	response.data = frappe.response['filecontent']
+
+#	print(frappe.response)
+#	return {"test":"test"}
+
