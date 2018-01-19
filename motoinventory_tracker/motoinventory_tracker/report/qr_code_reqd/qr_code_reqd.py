@@ -167,7 +167,7 @@ def choose_records(args):
 					"creation_date": rows[6],
 					"doctype": "QR Code Item",
 					"parenttype": "QR Code",
-					"parentfield": "item"
+					"parentfield": "items"
 				  	}
 		outerJson_Transfer["items"].append(innerJson_Transfer)
 
@@ -191,11 +191,6 @@ def choose_records(args):
 		return docid
 
 	
-@frappe.whitelist()
-def make_text_file(frm):
-	frappe.msgprint(_("Inside Make Text File"))
-	frappe.msgprint(_(frm.doc.name))
-
 @frappe.whitelist()
 def make_text(args):
 	curr_date = utils.today()
