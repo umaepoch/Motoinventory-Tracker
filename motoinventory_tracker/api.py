@@ -2,13 +2,8 @@
 
 from __future__ import unicode_literals
 import frappe
-
-import os.path
-import sys
-
-from frappe import _, msgprint, utils
+from frappe import _, msgprint
 from frappe.utils import flt, getdate, datetime
-from werkzeug.wrappers import Response
 
 @frappe.whitelist()
 def validate_serial_no(serial_no):
@@ -544,10 +539,12 @@ def make_sales_invoice(serial_no):
 @frappe.whitelist()
 def change_status(serial_no, brn):
 
-	current_item_code = ""	
+	current_item_code = ""
+	deliveryreqat = ""
+	deliveryreqon = ""
 	currentrecord = frappe.get_doc("Serial No", serial_no)
 	if currentrecord:
-		current_item_code = currentrecord.item_code	
+		current_item_code = currentrecord.item_code
 		alreadyexistingrecord = frappe.db.sql("""select sn.name from `tabSerial No` sn where sn.booking_reference_number = %s and sn.vehicle_status = "Allocated but not Delivered" """,(brn))
 		if alreadyexistingrecord:
 			existingserialno = frappe.get_doc("Serial No", alreadyexistingrecord[0][0])
@@ -560,6 +557,22 @@ def change_status(serial_no, brn):
 		currentrecord.booking_reference_number = brn
 		currentrecord.vehicle_status = "Allocated but not Delivered"
 		currentrecord.save()
+		#added this on 21 Jan 2018 to populate the delivery required on and delivery req at fields in Sales order
+		salesorder_record = frappe.db.sql("""select so.name from `tabSales Order` so where so.booking_reference_number = %(bookingrefno)s""",{'bookingrefno': brn})
+		if salesorder_record:
+			#populate the delivery date and delivery req WH here
+			sales_order_doc = frappe.get_doc("Sales Order", salesorder_record[0][0])
+			if sales_order_doc:
+				currentrecord.delivery_required_on = sales_order_doc.delivery_date
+				currentrecord.delivery_required_at = sales_order_doc.delivery_required_at
+				currentrecord.save()
+			else:
+				msg = """ Something went wrong while fetching the sales order with booking reference number {bookrefno} from the backend""".format(bookrefno=brn).encode('ascii')
+				return msg
+		else:
+			msg = """ There is no Sales Order avaliable with the booking reference number {brefn} on backend""".format(brefn=brn).encode('ascii')
+			return msg 
+		#end: change on 21st Jan 2018
 		frappe.db.commit()
 		msg = """Changed the status to Allocated but not Delivered for vehicle {vehicle} with booking reference number {bookrefno}""".format(vehicle=serial_no,bookrefno=brn).encode('ascii')
 	else:
@@ -635,7 +648,6 @@ def submit_sales_invoice(serial_no):
 
 @frappe.whitelist()
 def make_text_file(frm):
-	frappe.msgprint(_("Inside"))
 	qr_record = frappe.get_doc("QR Code", frm)
 
 	qr_items = frappe.db.sql("""select qri.serial_number as serial_number, qri.item_code as item_code from `tabQR Code` qr, `tabQR Code Item` qri where qri.parent = %s and qr.name = qri.parent and qri.print_qr = '1'""" , (qr_record.name), as_dict=1)
