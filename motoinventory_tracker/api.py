@@ -563,7 +563,11 @@ def change_status(serial_no, brn):
 			#populate the delivery date and delivery req WH here
 			sales_order_doc = frappe.get_doc("Sales Order", salesorder_record[0][0])
 			if sales_order_doc:
-				currentrecord.delivery_required_on = sales_order_doc.delivery_date
+				#added on 26th Jan 2018
+				for sales_order_item_record in sales_order_doc.items:
+					if currentrecord.item_code == sales_order_item_record.item_code:
+						currentrecord.delivery_required_on = sales_order_item_record.delivery_date
+				#end added on 26th Jan 2018
 				currentrecord.delivery_required_at = sales_order_doc.delivery_required_at
 				currentrecord.save()
 			else:
