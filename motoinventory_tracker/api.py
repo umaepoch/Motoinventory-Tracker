@@ -556,7 +556,7 @@ def change_status(serial_no, brn):
 				
 		currentrecord.booking_reference_number = brn
 		currentrecord.vehicle_status = "Allocated but not Delivered"
-		currentrecord.save()
+		#currentrecord.save()
 		#added this on 21 Jan 2018 to populate the delivery required on and delivery req at fields in Sales order
 		salesorder_record = frappe.db.sql("""select so.name from `tabSales Order` so where so.booking_reference_number = %(bookingrefno)s""",{'bookingrefno': brn})
 		if salesorder_record:
@@ -569,7 +569,7 @@ def change_status(serial_no, brn):
 						currentrecord.delivery_required_on = sales_order_item_record.delivery_date
 				#end added on 26th Jan 2018
 				currentrecord.delivery_required_at = sales_order_doc.delivery_required_at
-				currentrecord.save()
+				#currentrecord.save()
 			else:
 				msg = """ Something went wrong while fetching the sales order with booking reference number {bookrefno} from the backend""".format(bookrefno=brn).encode('ascii')
 				return msg
@@ -577,6 +577,7 @@ def change_status(serial_no, brn):
 			msg = """ There is no Sales Order avaliable with the booking reference number {brefn} on backend""".format(brefn=brn).encode('ascii')
 			return msg 
 		#end: change on 21st Jan 2018
+		currentrecord.save()
 		frappe.db.commit()
 		msg = """Changed the status to Allocated but not Delivered for vehicle {vehicle} with booking reference number {bookrefno}""".format(vehicle=serial_no,bookrefno=brn).encode('ascii')
 	else:
