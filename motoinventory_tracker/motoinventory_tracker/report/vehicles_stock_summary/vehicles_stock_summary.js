@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Modified Stock Balance"] = {
+frappe.query_reports["Vehicles Stock Summary"] = {
 	"filters": [
 		{
 			"fieldname":"from_date",
