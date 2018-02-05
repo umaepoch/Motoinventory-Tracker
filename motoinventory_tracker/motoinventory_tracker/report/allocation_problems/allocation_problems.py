@@ -112,7 +112,7 @@ def get_item_map(filters):
  #       to_date = getdate(filters["to_date"])
 	
         sle = get_serial_numbers(filters)
-	kle = get_items_wo_serial_numbers(filters)
+#	kle = get_items_wo_serial_numbers(filters)
 
         for d in sle:
                 key = (d.sales_order, d.item_code)
@@ -130,23 +130,23 @@ def get_item_map(filters):
 		qty_dict.serial_number = d.serial_number
 		qty_dict.serial_item = d.serial_item	
 
-	if kle:
+#	if kle:
 
-        	for d in kle:
-	                key = (d.sales_order, d.item_code)
-        	        if key not in iwb_map:
-        	                iwb_map[key] = frappe._dict({
-                                                        })
+ #       	for d in kle:
+#	                key = (d.sales_order, d.item_code)
+ #       	        if key not in iwb_map:
+  #      	                iwb_map[key] = frappe._dict({
+#                                                        })
 
-        	        qty_dict = iwb_map[(d.sales_order, d.item_code)]
+   #     	        qty_dict = iwb_map[(d.sales_order, d.item_code)]
 
-        	        qty_dict.brn = d.brn
-			qty_dict.customer = d.customer
-			qty_dict.delivery_date = d.del_date
-			qty_dict.status = d.status
-			qty_dict.delivery_status = d.delivery_status
-			qty_dict.serial_number = d.serial_number
-			qty_dict.serial_item = d.serial_item		
+    #    	        qty_dict.brn = d.brn
+	#		qty_dict.customer = d.customer
+	#		qty_dict.delivery_date = d.del_date
+	#		qty_dict.status = d.status
+	#		qty_dict.delivery_status = d.delivery_status
+	#		qty_dict.serial_number = d.serial_number
+	#		qty_dict.serial_item = d.serial_item		
 	
      
         return iwb_map
