@@ -64,6 +64,7 @@ def execute(filters=None):
 			else:
 				summ_data.append([prev_item, qty])
 				prev_item = work_item
+				qty = 0
 #				summ_data.append([work_item, qty])
 		
 		loop_count = loop_count + 1
@@ -116,7 +117,9 @@ def get_item_map(filters):
  #       to_date = getdate(filters["to_date"])
 	
         sle = get_serial_numbers(filters)
+
 	kle = get_items_allocated(filters)
+
 #	kle = get_items_wo_serial_numbers(filters)
 
         for d in sle:
