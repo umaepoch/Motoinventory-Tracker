@@ -59,7 +59,7 @@ def get_columns():
                
         columns = [
 		_("Item Code")+":Link/Item:100",
-		_("Serial Number")+":Link/Serial Number:100",
+		_("Serial Number")+":Link/Serial No:100",
 		_("Booking Reference Number")+"::100",
 		_("Delivery Required On")+":Date:100",
 		_("Delivery Required At")+"::100",
