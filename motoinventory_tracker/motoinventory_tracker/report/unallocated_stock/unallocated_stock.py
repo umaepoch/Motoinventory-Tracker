@@ -33,26 +33,44 @@ def execute(filters=None):
         if not filters: filters = {}
 
         columns = get_columns()
-       
+        prev_item = ""
+	work_item = ""
+	qty = 0
+	loop_count = 0
         iwb_map = get_item_map(filters)
 
         data = []
         
-	disp_nm_records = filters.get("display_nm_records")
-	
 
-        for (item_code) in sorted(iwb_map):
-                qty_dict = iwb_map[item_code]
+
+        for (item_code, unallot_stock) in sorted(iwb_map):
+                qty_dict = iwb_map[item_code, unallot_stock]
+
                 data.append([
-                        item_code, qty_dict.unallot_stock
+                        item_code, unallot_stock
                         
                     ])
 
-	for rows in data: 
+	for rows in data:
+		if loop_count == 0:
+			work_item = rows[0]
+			prev_item = rows[0]
+			qty = rows[1]
+		else:
+			work_item = rows[0]
+			if prev_item == work_item:
+				qty = qty + rows[1]
 
-		summ_data.append([rows[0], rows[1]
-					
-				])
+			else:
+				summ_data.append([prev_item, qty])
+				prev_item = work_item
+#				summ_data.append([work_item, qty])
+		
+		loop_count = loop_count + 1
+
+	summ_data.append([work_item, qty])
+
+
 						 
 	return columns, summ_data 
 
@@ -88,7 +106,7 @@ def get_items_allocated(filters):
         conditions = get_conditions(filters)
 	
         return frappe.db.sql("""Select sn.item_code as item_code, 0 as unallot_stock
-from `tabSerial No` sn where sn.booking_reference_number is not Null and sn.vehicle_status = "Delivered" %s
+from `tabSerial No` sn where not exists (Select 1 from `tabSerial No` sn2 where sn2.booking_reference_number is not Null and sn.vehicle_status = "Delivered") %s
 GROUP BY sn.item_code"""  % conditions, as_dict=1)
 
 
@@ -102,25 +120,24 @@ def get_item_map(filters):
 #	kle = get_items_wo_serial_numbers(filters)
 
         for d in sle:
-                key = (d.item_code)
+                key = (d.item_code, d.unallot_stock)
                 if key not in iwb_map:
                         iwb_map[key] = frappe._dict({
                                                         })
 
-                qty_dict = iwb_map[(d.item_code)]
+                qty_dict = iwb_map[(d.item_code, d.unallot_stock)]
 
-		qty_dict.unallot_stock = d.unallot_stock	
 
 	if kle:
  		for d in kle:
-	                key = (d.item_code)
+	                key = (d.item_code, d.unallot_stock)
         	        if key not in iwb_map:
         	                iwb_map[key] = frappe._dict({
+				
                                                         })
 
-        	        qty_dict = iwb_map[(d.item_code)]
+        	        qty_dict = iwb_map[(d.item_code, d.unallot_stock)]
 
-			qty_dict.unallot_stock = d.unallot_stock
      
         return iwb_map
 
