@@ -207,7 +207,6 @@ def make_text(args):
 
 	f.write("^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA")
 	f.write("^PR2,2~SD15^JUS^LRN^CI0^XZ")
-	f.write("^XA^MMT^PW812^LL0406^LS0")
 
 #	txt = "^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA^PR2,2~SD15^JUS^LRN^CI0^XZ^XA^MMT^PW812^LL0406^LS0"
 	for rows in summ_data:	
@@ -215,6 +214,7 @@ def make_text(args):
 ##		number_labels = int(number_labels)
 		nol = int(number_labels) + 1
 		for x in xrange(1, nol):
+			f.write("^XA^MMT^PW812^LL0406^LS0")
 			f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows[0]))
 			f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows[1]))
 			f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows[0]))

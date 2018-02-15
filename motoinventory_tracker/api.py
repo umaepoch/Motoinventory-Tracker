@@ -671,12 +671,13 @@ def make_text_file(frm):
 
 	f.write("^XA~TA000~JSN^LT0^MNW^MTT^PON^PMN^LH0,0^JMA")
 	f.write("^PR2,2~SD15^JUS^LRN^CI0^XZ")
-	f.write("^XA^MMT^PW812^LL0406^LS0")
+	
 	number_labels = qr_record.number_of_labels
 	for rows in qr_items:	
 ##		number_labels = int(number_labels)
 		nol = int(number_labels) + 1
 		for x in xrange(1, nol):
+			f.write("^XA^MMT^PW812^LL0406^LS0")
 			f.write("^FT250,79^A0R,28,28^FH\^FD%s^FS" % (rows.serial_number))
 			f.write("^FT533,53^A0R,28,28^FH\^FD%s^FS" % (rows.item_code))
 			f.write("^FT300,301^BQN,2,8^FH\^FDMA1%s^FS" % (rows.serial_number))
