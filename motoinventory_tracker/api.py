@@ -128,11 +128,9 @@ def cancel_stock_entry(serial_no):
 @frappe.whitelist()
 def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
 
-	#targetWH = "Truck - RE"
-	#targetWH = ""	
 	space = " "
 	hyphen = "-"
-	#truckWH = "Truck"
+	
 	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Transfer' and sd.s_warehouse = %(string2)s """, {'string1': serial_no, 'string2': source_warehouse})
 	if records:
 		#added code on Oct 13th 2017....start here
@@ -155,10 +153,9 @@ def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
 		if companyDoc:
 			companyabbr = companyDoc.abbr
 					
-		#targetWH = truckWH+space+hyphen+space+companyabbr
-
+		
 		if at_warehouse != source_warehouse:
-			message = """The vehicle with serial no {vehicle} is not present in the warehouse {swh} for it to be moved on to the Truck. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse).encode('ascii')
+			message = """Error: The vehicle with serial no {vehicle} is not present in the warehouse {swh} for it to be moved/transferred. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse).encode('ascii')
 			return message
 
 		if item:
@@ -194,20 +191,19 @@ def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
 			doc.save()
 			docname = doc.name
 			frappe.db.commit()
-			return """Stock entry {ste} created for vehicle {sln}""".format(ste=docname,sln=serial_no).encode('ascii')
+			return """Success:Stock entry {ste} created for vehicle {sln}. Vehicle has been moved.""".format(ste=docname,sln=serial_no).encode('ascii')
 		else:
-			return """The Item Code couldnt not be found for vehicle with serial no {sln}, not creating a stock entry""".format(sln=serial_no).encode('ascii')
+			return """Error: The Item Code could not be found for vehicle with serial no {sln}, not creating a stock entry""".format(sln=serial_no).encode('ascii')
 	else:
-		return """The vehicle with serial no {sln} could not be found, not creating a stock entry""".format(sln=serial_no).encode('ascii')
+		return """Error: The vehicle with serial no {sln} could not be found, not creating a stock entry""".format(sln=serial_no).encode('ascii')
 
 
 @frappe.whitelist()
 def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_warehouse):
 
-	#expected_sourcewh = ""	
-	space =" " # "Truck - RE"
+	space =" " 
 	hyphen = "-"
-	#truckWH = "Truck"		
+			
 	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Transfer' and sd.t_warehouse = %(string2)s """, {'string1': serial_no, 'string2': destination_warehouse})
 	if records:
 		
@@ -229,8 +225,7 @@ def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_wareho
 		companyDoc = frappe.get_doc("Company",company)
 		if companyDoc:
 			companyabbr = companyDoc.abbr
-		#expected_sourcewh = truckWH+space+hyphen+space+companyabbr
-
+		
 		if at_warehouse == destination_warehouse:
 			message = """The vehicle with serial no {vehicle} is already at the warehouse {swh}, cannot make a stock entry""".format(vehicle=serial_no,swh=destination_warehouse).encode('ascii')
 			return message
@@ -651,6 +646,25 @@ def submit_sales_invoice(serial_no):
 		returnmsg = """Sales Invoice for the vehicle with Serial No {sln} could not be found and submitted""".format(sln=serial_no).encode('ascii')
 	return returnmsg
 
+#Start : Added on 14th Feb 2018 to allow rolling back of a sales invoice
+@frappe.whitelist()
+def cancel_sales_invoice(serial_no):
+
+	returnmsg = ""
+	records = frappe.db.sql("""select sd.parent from `tabSales Invoice Item` sd, `tabSales Invoice` se where sd.serial_no = %s and se.docstatus = 1 and sd.parent = se.name""",(serial_no))
+	for r in records:
+		record = frappe.get_doc("Sales Invoice",r[0])
+		if record:
+			frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Allocated but not Delivered' where sn.name = (select se.serial_no from `tabSales Invoice Item` se where se.parent = %s)""",(record.name))
+			record.cancel()
+			frappe.db.commit()
+			returnmsg = """Success: Previous delivery and assocaiated sales invoice of vehicle with serial no {sln} cancelled. Changed the vehicle status back to Allocated but not Delivered.""".format(sln=serial_no).encode('ascii')
+		else:
+			returnmsg = """Error: Something went wrong in fetching the Sales Invoice for vehicle with serial no {sln}""".format(sln=serial_no).encode('ascii')
+		return returnmsg
+#End: Added on 14th Feb 2018
+
+
 @frappe.whitelist()
 def make_text_file(frm):
 	qr_record = frappe.get_doc("QR Code", frm)
@@ -686,21 +700,4 @@ def make_text_file(frm):
 	ferp.save()
 	f.close()
 
-#	print("Inside Download")
-#	response = Response()
-#	filename = "qrcode.txt"
-#	frappe.response.filename = "qrcode2018-01-19.txt"
-#	response.mimetype = 'text/plain'
-#	response.charset = 'utf-8'
-#	with open("proman/private/files/qrcode2018-01-19.txt", "rb") as fileobj:
-#		filedata = fileobj.read()
-#	print("Created Filedata")
-#	frappe.response.filecontent = filedata
-#	print("Created Filecontent")
-#	response.type = "download"
-#	response.headers[b"Content-Disposition"] = ("filename=\"%s\"" % frappe.response['filename'].replace(' ', '_')).encode("utf-8")
-#	response.data = frappe.response['filecontent']
-
-#	print(frappe.response)
-#	return {"test":"test"}
 
