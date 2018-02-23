@@ -38,7 +38,7 @@ def make_stock_entry(serial_no,destination_warehouse):
 
 	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %s""", (serial_no))
 	if records:
-		return 'The stock entry for this serial no already exists'
+		return 'Error: The stock entry for this serial no already exists'
 	
 	innerJson = ""
 	
@@ -80,11 +80,11 @@ def make_stock_entry(serial_no,destination_warehouse):
 			doc.save()
 			frappe.db.commit()
 			docname = doc.name
-			return """Stock entry {sle} created for vehicle with serial no {sln}""".format(sle = docname, sln = serial_no).encode('ascii')
+			return """Success: Stock entry {sle} created for vehicle with serial no {sln}""".format(sle = docname, sln = serial_no).encode('ascii')
 		else:
-			return """The item code does not exist for the vehicle with serial no {sln}. Could not create a stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
+			return """Error: The item code does not exist for the vehicle with serial no {sln}. Could not create a stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
 	else:
-		return """Could not find vehicle with serial no {sln}. Could not create a stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
+		return """Error: Could not find vehicle with serial no {sln}. Could not create a stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
 
 @frappe.whitelist()
 def submit_stock_entry(serial_no):
@@ -108,9 +108,9 @@ def submit_stock_entry(serial_no):
 		
 			record.submit()
 			frappe.db.commit()
-			returnmsg = """Submitted the stock entry {stockentryname} for vehicle {sln} successfully!""".format(stockentryname=record.name, sln=serial_no).encode('ascii')
+			returnmsg = """Success: Submitted the stock entry {stockentryname} for vehicle {sln}""".format(stockentryname=record.name, sln=serial_no).encode('ascii')
 		else:
-			returnmsg = """Could not find the stock entry for vehicle {sln} in the draft state to submit!""".format(sln=serial_no).encode('ascii')
+			returnmsg = """Error: Could not find the stock entry for vehicle {sln} in the draft state to submit!""".format(sln=serial_no).encode('ascii')
 		
 	return returnmsg
 
@@ -138,7 +138,7 @@ def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
 		if serialNoTableRecord: 
 		#13th Oct change ....end here. The above condition means that there exists a serial no which is originating at source and still
 		#on truck, so cannot have another Stock entry
-			return 'The stock entry for this serial no already exists'
+			return 'Error: The stock entry for this serial no already exists'
 	
 	innerJson = ""
 	
@@ -191,7 +191,7 @@ def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
 			doc.save()
 			docname = doc.name
 			frappe.db.commit()
-			return """Success:Stock entry {ste} created for vehicle {sln}. Vehicle has been moved.""".format(ste=docname,sln=serial_no).encode('ascii')
+			return """Success: Stock entry {ste} created for vehicle {sln}.""".format(ste=docname,sln=serial_no).encode('ascii')
 		else:
 			return """Error: The Item Code could not be found for vehicle with serial no {sln}, not creating a stock entry""".format(sln=serial_no).encode('ascii')
 	else:
@@ -211,7 +211,7 @@ def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_wareho
 		serialNoRecord = frappe.db.sql("""select sn.serial_no from `tabSerial No` sn where sn.serial_no = %(stringslno)s and sn.warehouse = %(stringwh)s""", {'stringslno' : serial_no, 'stringwh': destination_warehouse})
 		if serialNoRecord:
 		#End change		
-			return 'The stock entry for this serial no already exists'
+			return 'Error: The stock entry for this serial no already exists'
 	
 	innerJson = ""
 	
@@ -227,10 +227,10 @@ def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_wareho
 			companyabbr = companyDoc.abbr
 		
 		if at_warehouse == destination_warehouse:
-			message = """The vehicle with serial no {vehicle} is already at the warehouse {swh}, cannot make a stock entry""".format(vehicle=serial_no,swh=destination_warehouse).encode('ascii')
+			message = """Error: The vehicle with serial no {vehicle} is already at the warehouse {swh}, cannot make a stock entry""".format(vehicle=serial_no,swh=destination_warehouse).encode('ascii')
 			return message
 		if at_warehouse != source_warehouse:
-			errormsg = """The vehicle with serial no {vehicle} is not present at the warehouse {swh} for it to be moved to {dwh}. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse,dwh=destination_warehouse).encode('ascii')
+			errormsg = """Error: The vehicle with serial no {vehicle} is not present at the warehouse {swh} for it to be moved to {dwh}. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse,dwh=destination_warehouse).encode('ascii')
 			return errormsg
 		if item:
 			item_record = frappe.get_doc("Item", item)
@@ -265,12 +265,12 @@ def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_wareho
 			doc.save()
 			docname = doc.name
 			frappe.db.commit()
-			return """Stock entry {sle} is created for vehicle with serial no {sln}""".format(sle=docname,sln=serial_no).encode('ascii')
+			return """Success: Stock entry {sle} created for vehicle with serial no {sln}""".format(sle=docname,sln=serial_no).encode('ascii')
 		else:
-			return """Could not find item code for the vehicle with serial no {sln}. Could not create stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
+			return """Error: Could not find item code for the vehicle with serial no {sln}. Could not create stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
 #added tis line to deal with the else part of not finidng the scanned serial no document
 	else:
-		return """Serial No {sln} couldnt not be found. Could not create a stock entry for this vehicle""".format(sln = serial_no).encode('ascii')
+		return """Error: Serial No {sln} couldnt not be found. Could not create a stock entry for this vehicle""".format(sln = serial_no).encode('ascii')
 
 #to make delivery note and submit it
 
@@ -404,7 +404,7 @@ def send_IBNR_mail(emailadd=[]):
 			invoiced_message=_("Invoiced but not Received list is as follows <p>  {invoicedlist}</p>").format(invoicedlist=submessage)	
 			)	
 	frappe.sendmail(recipients=emailadd, sender=sender, subject=subject,message=message, delayed=False)
-	return emailadd
+	return """Success: Sent email to recipients {emailadd}""".format(emailadd=emailadd).encode('ascii')
 
 
 @frappe.whitelist()
@@ -476,7 +476,7 @@ def make_new_serial_no_entry(serial_no,item_code):
 	doc.update(newJson)
 	doc.save()
 	frappe.db.commit()
-	return doc.name
+	return """"Success: A new serial no {doc} is created""".format(doc=doc.name).encode('ascii')
 
 @frappe.whitelist()
 def submit_deliver_vehicle_stock_entry(serial_no):
@@ -521,14 +521,14 @@ def make_sales_invoice(serial_no):
 						salesinvoice.save()
 						#salesinvoice.submit()     #submit in the submit_sales_invoice methd
 						frappe.db.commit()
-						return 'sales invoice '+salesinvoice.name+' created for sales order '+salesorder.name+' with booking reference number '+brn
+						return 'Success: sales invoice '+salesinvoice.name+' created for sales order '+salesorder.name+' with booking reference number '+brn
 				
 			else:
-				return 'Couldnt find the matching salesorder that is ready to be billed'
+				return 'Error: Couldnt find the matching salesorder that is ready to be billed'
 		else:
-			return 'The sales order for this vehicle doesnt exist'
+			return 'Error: The sales order for this vehicle doesnt exist'
 	else:
-		msg = """The vehicle with the serial no {sln} does not exist on ERPNext""".format(sln = serial_no).encode('ascii')		
+		msg = """Error: The vehicle with the serial no {sln} does not exist on ERPNext""".format(sln = serial_no).encode('ascii')		
 		return msg
 
 @frappe.whitelist()
@@ -547,6 +547,8 @@ def change_status(serial_no, brn):
 			if existingserialno:
 				existingserialno.booking_reference_number = ""
 				existingserialno.vehicle_status = "Received but not Allocated"	#roll back the previous serial no with the brn
+				existingserialno.delivery_required_at = ""
+				existingserialno.delivery_required_on = ""
 				existingserialno.save()
 				
 		currentrecord.booking_reference_number = brn
@@ -566,26 +568,26 @@ def change_status(serial_no, brn):
 				currentrecord.delivery_required_at = sales_order_doc.delivery_required_at
 				#currentrecord.save()
 			else:
-				msg = """ Something went wrong while fetching the sales order with booking reference number {bookrefno} from the backend""".format(bookrefno=brn).encode('ascii')
+				msg = """Error: Something went wrong while fetching the sales order with booking reference number {bookrefno} from the backend""".format(bookrefno=brn).encode('ascii')
 				return msg
 		else:
-			msg = """ There is no Sales Order avaliable with the booking reference number {brefn} on backend""".format(brefn=brn).encode('ascii')
+			msg = """Error: There is no Sales Order avaliable with the booking reference number {brefn} on ERPNext""".format(brefn=brn).encode('ascii')
 			return msg 
 		#end: change on 21st Jan 2018
 		currentrecord.save()
 		frappe.db.commit()
-		msg = """Changed the status to Allocated but not Delivered for vehicle {vehicle} with booking reference number {bookrefno}""".format(vehicle=serial_no,bookrefno=brn).encode('ascii')
+		msg = """Success: Changed the status to Allocated but not Delivered for vehicle {vehicle} with booking reference number {bookrefno}""".format(vehicle=serial_no,bookrefno=brn).encode('ascii')
 	else:
-		msg = """"Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
+		msg = """"Error: Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
 	return msg
 
 @frappe.whitelist()
 def allocate_vehicle(serial_no, brn):
 
 	returnval = 0
-	salesorder_record = frappe.db.sql("""select so.name from `tabSales Order` so where so.booking_reference_number = %(bookingrefno)s""",{'bookingrefno': brn})
+	salesorder_record = frappe.db.sql("""select so.name from `tabSales Order` so where so.booking_reference_number = %(bookingrefno)s and so.docstatus = 1""",{'bookingrefno': brn})
 	if not salesorder_record:
-		returnval = -1
+		return -1
 			
 	if salesorder_record :
 		serialno_record = frappe.get_doc("Serial No", serial_no)
@@ -594,35 +596,38 @@ def allocate_vehicle(serial_no, brn):
 			vehicle_status = serialno_record.vehicle_status
 			#added this code on 24Oct 2017, to directly return if the vehicle has been delivered already.
 			if vehicle_status == "Delivered":
-				return -6
+				return -2
 			record = frappe.db.sql("""select sd.parent from `tabSales Order Item` sd, `tabSales Order` se where sd.parent = se.name and sd.item_code = %(string1)s and se.booking_reference_number = %(string2)s""", {'string1': item_code, 'string2': brn })
 			if record:
-				if vehicle_status == "Received but not Allocated":				
-					returnval = 1	#Sucess, all conditions are met
-					#Check if there is another serial no allocated to this BRN
-					alreadyexisitngserialno = frappe.db.sql("""select sn.name from `tabSerial No` sn where sn.booking_reference_number = %s""", brn)
-					if alreadyexisitngserialno:
-						#added these lines of code to not allow the SO of an delivered vehicle to be allocated to another vehicle
-						alreadyexistingserialno_doc = frappe.get_doc("Serial No", alreadyexisitngserialno[0][0])
-						if alreadyexistingserialno_doc:
-							if alreadyexistingserialno_doc.vehicle_status == "Delivered":
-								return -7
-							else:
-								return 2 #there already exists a serial no with this booking reference number
-				else:
-					if vehicle_status == "Allocated but not Delivered":
-						returnval = -2	#Status is not RBNA, it is ABND, roll back previous allocation
-					elif vehicle_status == "Invoiced but not Received":
-						returnval = -5
+				#do something
+				#Check if there is another serial no allocated to this BRN
+				alreadyexistingserialno = frappe.db.sql("""select sn.name from `tabSerial No` sn where sn.booking_reference_number = %s""", brn)
+				if alreadyexistingserialno:
+					alreadyexistingserialno_doc = frappe.get_doc("Serial No", alreadyexistingserialno[0][0])
+					if alreadyexistingserialno_doc:
+						if alreadyexistingserialno_doc.vehicle_status == "Delivered":
+							return -6
+						else:
+							return 2 #there already exists a serial no with this booking reference number
 					else:
-						returnval = -6
-			
+						return 0
+				else:
+					#all conditions are met to allocate the vehicle to this brn
+					if vehicle_status == "Received but not Allocated":
+						return 1
+					else:
+						#all conditions are met exccpet for vehicle status not being RBNA
+						if vehicle_status == "Invoiced but not Received":
+							return -4
+						else:
+							return -5 #in the outside chance that the vehicl's status is set to ABND
+							
 			else:
-				return -3 #added this on 24th Oct 2017, to return -3 if item codes dont match at all, should not allocate
-				
-	
+				return -3 #item codes dont match
+		else:
+			return 0			
 	return returnval
- 
+
 @frappe.whitelist()
 def submit_sales_invoice(serial_no):
 
@@ -641,9 +646,9 @@ def submit_sales_invoice(serial_no):
 			recordfoundandsubmitted = True
 			frappe.db.commit()
 	if recordfoundandsubmitted:
-		returnmsg = """Sales Invoice submitted for the vehicle with Serial No {sln}""".format(sln=serial_no).encode('ascii')
+		returnmsg = """Success: Sales Invoice submitted for the vehicle with Serial No {sln}""".format(sln=serial_no).encode('ascii')
 	else:
-		returnmsg = """Sales Invoice for the vehicle with Serial No {sln} could not be found and submitted""".format(sln=serial_no).encode('ascii')
+		returnmsg = """Error: Sales Invoice for the vehicle with Serial No {sln} could not be found and submitted""".format(sln=serial_no).encode('ascii')
 	return returnmsg
 
 #Start : Added on 14th Feb 2018 to allow rolling back of a sales invoice
