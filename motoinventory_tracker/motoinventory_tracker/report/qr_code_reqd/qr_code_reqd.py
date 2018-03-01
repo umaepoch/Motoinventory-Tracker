@@ -11,18 +11,20 @@ import math
 import ast
 import os.path
 import sys
+import datetime
 print sys.path
 
 from frappe import _, msgprint, utils
 from datetime import datetime, timedelta
-from frappe.utils import flt, getdate, datetime,comma_and
+from frappe.utils import flt, getdate, datetime, comma_and
 from collections import defaultdict
 from werkzeug.wrappers import Response
+#format = "%a %b %d %H:%M:%S %Y"
+format = "%Y-%m-%d %H:%M:%S"
 
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
-
 
 
 def execute(filters=None):
@@ -51,13 +53,13 @@ def execute(filters=None):
 
 	number_labels = filters.get("number_labels")
 	for rows in data: 
+		created_date = rows[6]
+		created_from = filters.get("created_from")
+		created_from = datetime.datetime.strptime(created_from, format)
+		created_to = filters.get("created_to")
+		created_to = datetime.datetime.strptime(created_to, format)
 
-		created_date = getdate(rows[6])
-		created_from = getdate(filters.get("created_from"))
-		created_to = getdate(filters.get("created_to"))
-	
 		if ((created_date >= created_from) and (created_date <= created_to)):
-					
 			summ_data.append([rows[0], rows[1],rows[2],
 		 	rows[3], rows[4], rows[5], rows[6], number_labels, rows[7]
 				

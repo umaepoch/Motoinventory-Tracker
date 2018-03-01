@@ -7,13 +7,13 @@ frappe.query_reports["QR Code Reqd"] = {
 		{
 			"fieldname":"created_from",
 			"label": __("Created Date From"),
-			"fieldtype": "Date",
+			"fieldtype": "Datetime",
 			"reqd": 1
 		},
 		{
 			"fieldname":"created_to",
 			"label": __("Created Date To"),
-			"fieldtype": "Date",
+			"fieldtype": "Datetime",
 			"reqd": 1
 		},
 		{
