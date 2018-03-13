@@ -27,7 +27,7 @@ def execute(filters=None):
 			item_reorder_qty = item_reorder_detail_map[item + warehouse]["warehouse_reorder_qty"]
 
 		report_data = [item, item_map[item]["item_name"],
-			item_map[item]["item_group"], qty_dict.in_qty,
+			item_map[item]["item_group"], warehouse, qty_dict.in_qty,
 			qty_dict.out_qty, qty_dict.bal_qty,
 		]
 
@@ -49,6 +49,7 @@ def get_columns():
 		_("Item")+":Link/Item:120",
 		_("Item Name")+"::300",
 		_("Item Group")+"::200",
+		_("Warehouse")+"::150",
 		_("In Qty")+":Float:100",
 		_("Out Qty")+":Float:100",
 		_("Balance Qty")+":Float:100",
