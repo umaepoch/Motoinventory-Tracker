@@ -4,7 +4,8 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from frappe.utils import flt, cint, getdate
+from frappe.utils import flt, cint, getdate, datetime
+from datetime import datetime, timedelta
 
 def execute(filters=None):
 	if not filters: filters = {}
@@ -59,8 +60,8 @@ def get_columns():
 
 def get_conditions(filters):
 	conditions = ""
-	if not filters.get("from_date"):
-		frappe.throw(_("'From Date' is required"))
+	conditions += " and sle.posting_date >= CURDATE() - 1"
+
 
 	if filters.get("to_date"):
 		conditions += " and sle.posting_date <= '%s'" % frappe.db.escape(filters.get("to_date"))

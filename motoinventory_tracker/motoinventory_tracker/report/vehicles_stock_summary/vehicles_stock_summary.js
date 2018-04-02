@@ -5,18 +5,11 @@
 frappe.query_reports["Vehicles Stock Summary"] = {
 	"filters": [
 		{
-			"fieldname":"from_date",
-			"label": __("From Date"),
-			"fieldtype": "Date",
-			"width": "80",
-			"default": frappe.defaults.get_user_default("year_start_date")
-		},
-		{
 			"fieldname":"to_date",
 			"label": __("To Date"),
 			"fieldtype": "Date",
 			"width": "80",
-			"default": frappe.defaults.get_user_default("year_end_date")
+			"default": frappe.datetime.get_today()
 		},
 		{
 			"fieldname": "item_group",
