@@ -60,13 +60,9 @@ def get_columns():
 
 def get_conditions(filters):
 	conditions = ""
-	conditions += " and sle.posting_date >= CURDATE() - 1"
+	conditions += " and sle.posting_date >= (CURDATE() - 1)"
 
-
-	if filters.get("to_date"):
-		conditions += " and sle.posting_date <= '%s'" % frappe.db.escape(filters.get("to_date"))
-	else:
-		frappe.throw(_("'To Date' is required"))
+	conditions += " and sle.posting_date <= CURDATE()"
 
 	if filters.get("item_group"):		
 		ig_details = frappe.db.get_value("Item Group", filters.get("item_group"), 
