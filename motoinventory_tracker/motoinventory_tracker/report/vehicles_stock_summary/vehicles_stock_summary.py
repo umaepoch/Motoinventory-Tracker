@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _
+from frappe import _, msgprint, utils
 from frappe.utils import flt, cint, getdate, datetime
 from datetime import datetime, timedelta
 
@@ -105,8 +105,8 @@ def get_stock_ledger_entries(filters):
 
 def get_item_warehouse_map(filters):
 	iwb_map = {}
-	from_date = getdate(filters.get("from_date"))
-	to_date = getdate(filters.get("to_date"))
+	from_date = getdate(utils.today()) - timedelta(1)
+	to_date = getdate(utils.today())
 
 	sle = get_stock_ledger_entries(filters)
 
