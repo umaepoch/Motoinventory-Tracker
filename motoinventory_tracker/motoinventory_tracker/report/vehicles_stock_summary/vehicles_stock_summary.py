@@ -60,7 +60,6 @@ def get_columns():
 
 def get_conditions(filters):
 	conditions = ""
-	conditions += " and sle.posting_date >= (CURDATE() - 1)"
 
 	conditions += " and sle.posting_date <= CURDATE()"
 
@@ -102,6 +101,18 @@ def get_stock_ledger_entries(filters):
 		where sle.docstatus < 2 %s 
 		order by sle.posting_date, sle.posting_time, sle.name""" %
 		(join_table_query, conditions), as_dict=1)
+
+	
+	return frappe.db.sql("""
+		select
+			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate,
+			sle.company, sle.voucher_type, sle.qty_after_transaction, sle.stock_value_difference
+		from
+			`tabStock Ledger Entry` sle force index (posting_sort_index) %s
+		where sle.docstatus < 2 and sle.item_code = "10205879BO" %s 
+		order by sle.posting_date, sle.posting_time, sle.name""" %
+		(join_table_query, conditions), as_dict=1)
+
 
 def get_item_warehouse_map(filters):
 	iwb_map = {}
