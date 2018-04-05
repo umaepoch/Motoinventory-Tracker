@@ -27,8 +27,7 @@ def execute(filters=None):
 			item_reorder_level = item_reorder_detail_map[item + warehouse]["warehouse_reorder_level"]
 			item_reorder_qty = item_reorder_detail_map[item + warehouse]["warehouse_reorder_qty"]
 
-		report_data = [item, item_map[item]["item_name"],
-			item_map[item]["item_group"], warehouse, qty_dict.in_qty,
+		report_data = [item, warehouse, qty_dict.in_qty,
 			qty_dict.out_qty, qty_dict.bal_qty,
 		]
 
@@ -48,8 +47,6 @@ def get_columns():
 
 	columns = [
 		_("Item")+":Link/Item:120",
-		_("Item Name")+"::300",
-		_("Item Group")+"::200",
 		_("Warehouse")+"::150",
 		_("In Qty")+":Float:100",
 		_("Out Qty")+":Float:100",
@@ -103,16 +100,6 @@ def get_stock_ledger_entries(filters):
 		(join_table_query, conditions), as_dict=1)
 
 	
-	return frappe.db.sql("""
-		select
-			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate,
-			sle.company, sle.voucher_type, sle.qty_after_transaction, sle.stock_value_difference
-		from
-			`tabStock Ledger Entry` sle force index (posting_sort_index) %s
-		where sle.docstatus < 2 and sle.item_code = "10205879BO" %s 
-		order by sle.posting_date, sle.posting_time, sle.name""" %
-		(join_table_query, conditions), as_dict=1)
-
 
 def get_item_warehouse_map(filters):
 	iwb_map = {}
