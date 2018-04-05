@@ -51,29 +51,29 @@ def execute(filters=None):
                         
                     ])
 
-	for rows in data:
-		if loop_count == 0:
-			work_item = rows[0]
-			prev_item = rows[0]
-			qty = rows[1]
-		else:
-			work_item = rows[0]
-			if prev_item == work_item:
-				qty = qty + rows[1]
+#	for rows in data:
+#		if loop_count == 0:
+#			work_item = rows[0]
+#			prev_item = rows[0]
+#			qty = rows[1]
+#		else:
+#			work_item = rows[0]
+#			if prev_item == work_item:
+#				qty = qty + rows[1]
 
-			else:
-				summ_data.append([prev_item, qty])
-				prev_item = work_item
-				qty = 0
+#			else:
+#				summ_data.append([prev_item, qty])
+#				prev_item = work_item
+#				qty = 0
 #				summ_data.append([work_item, qty])
 		
-		loop_count = loop_count + 1
+#		loop_count = loop_count + 1
 
-	summ_data.append([work_item, qty])
+#	summ_data.append([work_item, qty])
 
 
 						 
-	return columns, summ_data 
+	return columns, data 
 
 
 def get_columns():
