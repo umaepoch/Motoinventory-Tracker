@@ -100,7 +100,7 @@ def get_serial_numbers(filters):
         conditions = get_conditions(filters)
 	
         return frappe.db.sql("""Select sn.item_code as item_code, count(*) as unallot_stock
-from `tabSerial No` sn where sn.booking_reference_number is Null and sn.vehicle_status != "Delivered" %s
+from `tabSerial No` sn where sn.booking_reference_number is Null and sn.warehouse is not NULL and sn.vehicle_status != "Delivered" %s
 GROUP BY sn.item_code"""  % conditions, as_dict=1)
 
 def get_items_allocated(filters):
@@ -118,7 +118,7 @@ def get_item_map(filters):
 	
         sle = get_serial_numbers(filters)
 
-	kle = get_items_allocated(filters)
+#	kle = get_items_allocated(filters)
 
 #	kle = get_items_wo_serial_numbers(filters)
 
@@ -131,15 +131,15 @@ def get_item_map(filters):
                 qty_dict = iwb_map[(d.item_code, d.unallot_stock)]
 
 
-	if kle:
- 		for d in kle:
-	                key = (d.item_code, d.unallot_stock)
-        	        if key not in iwb_map:
-        	                iwb_map[key] = frappe._dict({
-				
-                                                        })
+#	if kle:
+ #		for d in kle:
+#	                key = (d.item_code, d.unallot_stock)
+ #       	        if key not in iwb_map:
+  #      	                iwb_map[key] = frappe._dict({
+#				
+ #                                                       })
 
-        	        qty_dict = iwb_map[(d.item_code, d.unallot_stock)]
+  #      	        qty_dict = iwb_map[(d.item_code, d.unallot_stock)]
 
      
         return iwb_map
