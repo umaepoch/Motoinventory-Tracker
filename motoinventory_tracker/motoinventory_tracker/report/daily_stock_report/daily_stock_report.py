@@ -17,12 +17,11 @@ def execute(filters=None):
 	data = []
 	for (item, serial_number, warehouse) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, serial_number, warehouse)]
-		if qty_dict.actual_qty > 0:
-			report_data = [item, serial_number, warehouse, qty_dict.actual_qty
-			]
+		report_data = [item, serial_number, warehouse, qty_dict.total
+		]
 
 
-			data.append(report_data)
+		data.append(report_data)
 
 
 	return columns, data
@@ -53,16 +52,12 @@ def get_stock_ledger_entries(filters):
 	join_table_query = ""
 	
 	return frappe.db.sql("""
-		select
-			sle.item_code, sle.serial_no, sle.warehouse, sle.posting_date, sle.actual_qty
-		from
-			`tabStock Ledger Entry` sle force index (posting_sort_index) %s
-		where sle.docstatus < 2 and sle.warehouse is not NULL %s 
-		order by sle.posting_date, sle.posting_time, sle.name""" %
-		(join_table_query, conditions), as_dict=1)
+		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, count(*) as total from `tabSerial No` sn 
+where sn.warehouse is not NULL %s
+order by sn.item_code 
+GROUP BY sn.item_code, sn.name""" % conditions), as_dict=1)
 
 	
-
 def get_item_warehouse_map(filters):
 	iwb_map = {}
 
@@ -72,14 +67,14 @@ def get_item_warehouse_map(filters):
 		key = (d.item_code, d.serial_no, d.warehouse)
 		if key not in iwb_map:
 			iwb_map[key] = frappe._dict({
-				"actual_qty": 0.0
+				"total": 0.0
 			})
 
 		qty_dict = iwb_map[(d.item_code, d.serial_no, d.warehouse)]
 		qty_dict.item_code = d.item_code
 		qty_dict.serial_no = d.serial_no
 		qty_dict.warehouse = d.warehouse
-		qty_dict.actual_qty = d.actual_qty
+		qty_dict.actual_qty = d.total
 		
 		
 	iwb_map = filter_items_with_no_transactions(iwb_map)
