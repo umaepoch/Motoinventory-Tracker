@@ -72,7 +72,7 @@ def get_conditions(filters):
 	conditions = ""
 
 	if filters.get("warehouse"):
-		conditions = " and sle.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
+		conditions = " and sn.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
 
 	return conditions
 
