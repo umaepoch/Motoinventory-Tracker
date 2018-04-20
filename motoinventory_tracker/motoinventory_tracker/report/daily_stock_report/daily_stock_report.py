@@ -14,14 +14,34 @@ def execute(filters=None):
 	item_map = get_item_details(filters)
 	iwb_map = get_item_warehouse_map(filters)
 
+	report_data = []
 	data = []
+	item_prev = ""
+	item_work = ""
+	total_count = 0
+	item_count = 0
 	for (item, serial_number, warehouse) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, serial_number, warehouse)]
-		report_data = [item, serial_number, warehouse, qty_dict.total
+		report_data = [item, serial_number, warehouse
 		]
+	
+	for rows in report_data:
+		if total_count == 0:
+			item_prev = rows[0]
+			data.append(item_prev, rows[1], rows[2], "")
+			
+		else:
+			item_work = rows[0]
+			if item_prev == item_work:
+				data.append(item_prev, rows[1], rows[2], "")
+				item_count = item_count + 1
+			else:
+				data.append(item_prev, "", "", item_count)
+				item_count = 0
+				item_prev = item_work
 
-
-		data.append(report_data)
+		total_count = total_count + 1
+		
 
 
 	return columns, data
@@ -33,7 +53,7 @@ def get_columns():
 		_("Item")+":Link/Item:120",
 		_("Serial No")+":Link/Serial No:120",
 		_("Warehouse")+"::150",
-		_("Qty")+":Float:100"
+		_("Total")+":Float:100"
 	]
 
 	return columns
@@ -52,10 +72,8 @@ def get_stock_ledger_entries(filters):
 	join_table_query = ""
 	
 	return frappe.db.sql("""
-		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, count(*) as total from `tabSerial No` sn 
-where sn.warehouse is not NULL %s
-order by sn.item_code 
-GROUP BY sn.item_code, sn.name""" % conditions, as_dict=1)
+		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse from `tabSerial No` sn 
+where sn.warehouse is not NULL %s order by sn.item_code""" % conditions, as_dict=1)
 
 	
 def get_item_warehouse_map(filters):
@@ -74,7 +92,6 @@ def get_item_warehouse_map(filters):
 		qty_dict.item_code = d.item_code
 		qty_dict.serial_no = d.serial_no
 		qty_dict.warehouse = d.warehouse
-		qty_dict.actual_qty = d.total
 		
 		
 	iwb_map = filter_items_with_no_transactions(iwb_map)
