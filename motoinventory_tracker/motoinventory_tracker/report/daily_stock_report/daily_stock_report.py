@@ -43,15 +43,20 @@ def execute(filters=None):
 				item_count = item_count + 1
 
 			else:
-				data.append([item_prev, "", "", item_count])
+				if item_count == 0:
+					data.append([item_prev, "", "", item_count+1])
+				else:
+					data.append([item_prev, "", "", item_count])
 
 				item_count = 0
 				item_prev = item_work
 
 		total_count = total_count + 1
 	data.append([item_work, serial_work, whse_work, ""])
-	data.append([item_work, "" , "", item_count])
-		
+	if item_count == 0:	
+		data.append([item_work, "", "", item_count+1])
+	else:
+		data.append([item_work, "", "", item_count])
 
 
 	return columns, data
