@@ -47,7 +47,8 @@ def execute(filters=None):
 
 			else:
 				if item_count == 0:
-					data.append([item_prev, serial_prev, whse_prev, item_count+1])
+					data.append([item_prev, serial_prev, whse_prev, ""])
+					data.append([item_prev, "", "", item_count+1])
 				else:
 					data.append([item_prev, "", "", item_count])
 
@@ -59,7 +60,8 @@ def execute(filters=None):
 		total_count = total_count + 1
 	data.append([item_work, serial_work, whse_work, ""])
 	if item_count == 0:	
-		data.append([item_work, serial_work, whse_work, item_count+1])
+		data.append([item_work, serial_work, whse_work, ""])
+		data.append([item_work, "", "", item_count+1])
 	else:
 		data.append([item_work, "", "", item_count])
 
