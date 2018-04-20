@@ -94,26 +94,8 @@ def get_item_warehouse_map(filters):
 		qty_dict.warehouse = d.warehouse
 		
 		
-	iwb_map = filter_items_with_no_transactions(iwb_map)
-
 	return iwb_map
 	
-def filter_items_with_no_transactions(iwb_map):
-	for (item_code, serial_no, warehouse) in sorted(iwb_map):
-		qty_dict = iwb_map[(item_code, serial_no, warehouse)]
-		
-		no_transactions = True
-		float_precision = cint(frappe.db.get_default("float_precision")) or 3
-		for key, val in qty_dict.items():
-			val = flt(val, float_precision)
-			qty_dict[key] = val
-			if key != "val_rate" and val:
-				no_transactions = False
-		
-		if no_transactions:
-			iwb_map.pop((company, item, warehouse))
-
-	return iwb_map
 
 def get_item_details(filters):
 	condition = ''
