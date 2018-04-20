@@ -17,12 +17,12 @@ def execute(filters=None):
 	data = []
 	for (item, serial_number, warehouse) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, serial_number, warehouse)]
+		if qty_dict.actual_qty > 0:
+			report_data = [item, serial_number, warehouse, qty_dict.actual_qty
+			]
 
-		report_data = [item, serial_number, warehouse, qty_dict.actual_qty
-		]
 
-
-		data.append(report_data)
+			data.append(report_data)
 
 
 	return columns, data
