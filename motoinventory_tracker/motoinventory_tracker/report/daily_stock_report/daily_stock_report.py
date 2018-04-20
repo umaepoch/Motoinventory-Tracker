@@ -55,7 +55,7 @@ def get_stock_ledger_entries(filters):
 		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, count(*) as total from `tabSerial No` sn 
 where sn.warehouse is not NULL %s
 order by sn.item_code 
-GROUP BY sn.item_code, sn.name""" % conditions), as_dict=1)
+GROUP BY sn.item_code, sn.name""" % conditions, as_dict=1)
 
 	
 def get_item_warehouse_map(filters):
