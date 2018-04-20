@@ -60,7 +60,6 @@ def execute(filters=None):
 		total_count = total_count + 1
 	data.append([item_work, serial_work, whse_work, ""])
 	if item_count == 0:	
-		data.append([item_work, serial_work, whse_work, ""])
 		data.append([item_work, "", "", item_count+1])
 	else:
 		data.append([item_work, "", "", item_count+1])
