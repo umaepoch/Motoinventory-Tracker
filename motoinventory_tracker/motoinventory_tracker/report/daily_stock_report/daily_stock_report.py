@@ -20,6 +20,9 @@ def execute(filters=None):
 	item_work = ""
 	serial_work = ""
 	whse_work = ""
+	serial_prev = ""
+	whse_prev = ""
+
 	total_count = 0
 	item_count = 0
 	for (item, serial_number, warehouse) in sorted(iwb_map):
@@ -44,17 +47,19 @@ def execute(filters=None):
 
 			else:
 				if item_count == 0:
-					data.append([item_prev, "", "", item_count+1])
+					data.append([item_prev, serial_prev, whse_prev, item_count+1])
 				else:
 					data.append([item_prev, "", "", item_count])
 
 				item_count = 0
 				item_prev = item_work
+				serial_prev = serial_work
+				whse_prev = whse_work
 
 		total_count = total_count + 1
 	data.append([item_work, serial_work, whse_work, ""])
 	if item_count == 0:	
-		data.append([item_work, "", "", item_count+1])
+		data.append([item_work, serial_work, whse_work, item_count+1])
 	else:
 		data.append([item_work, "", "", item_count])
 
