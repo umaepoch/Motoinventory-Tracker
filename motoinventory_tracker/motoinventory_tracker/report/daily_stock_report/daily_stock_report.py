@@ -21,7 +21,7 @@ def execute(filters=None):
 	serial_work = ""
 	whse_work = ""
 	total_count = 0
-	item_count = 1
+	item_count = 0
 	for (item, serial_number, warehouse) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, serial_number, warehouse)]
 		report_data.append([item, serial_number, warehouse
@@ -31,6 +31,7 @@ def execute(filters=None):
 		if total_count == 0:
 			item_prev = rows[0]
 			data.append([item_prev, rows[1], rows[2], ""])
+			item_count = item_count + 1
 			
 		else:
 			item_work = rows[0]
@@ -44,7 +45,7 @@ def execute(filters=None):
 			else:
 				data.append([item_prev, "", "", item_count])
 
-				item_count = 1
+				item_count = 0
 				item_prev = item_work
 
 		total_count = total_count + 1
