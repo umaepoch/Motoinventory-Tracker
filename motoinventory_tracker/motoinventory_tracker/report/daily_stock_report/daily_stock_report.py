@@ -63,7 +63,7 @@ def get_columns():
 		_("Item")+":Link/Item:120",
 		_("Serial No")+":Link/Serial No:120",
 		_("Warehouse")+"::150",
-		_("Total")+":Int:100"
+		_("Total")+"::100"
 	]
 
 	return columns
