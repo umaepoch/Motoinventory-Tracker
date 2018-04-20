@@ -18,11 +18,13 @@ def execute(filters=None):
 	data = []
 	item_prev = ""
 	item_work = ""
+	serial_work = ""
+	whse_work = ""
 	total_count = 0
-	item_count = 0
+	item_count = 1
 	for (item, serial_number, warehouse) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, serial_number, warehouse)]
-		report_data = ([item, serial_number, warehouse
+		report_data.append([item, serial_number, warehouse
 		])
 	
 	for rows in report_data:
@@ -32,15 +34,22 @@ def execute(filters=None):
 			
 		else:
 			item_work = rows[0]
+			serial_work = rows[1]
+			whse_work = rows[2]
+
 			if item_prev == item_work:
 				data.append([item_prev, rows[1], rows[2], ""])
 				item_count = item_count + 1
+
 			else:
 				data.append([item_prev, "", "", item_count])
-				item_count = 0
+
+				item_count = 1
 				item_prev = item_work
 
 		total_count = total_count + 1
+	data.append([item_work, serial_work, whse_work, ""])
+	data.append([item_work, "" , "", item_count])
 		
 
 
@@ -82,15 +91,15 @@ def get_item_warehouse_map(filters):
 	sle = get_stock_ledger_entries(filters)
 
 	for d in sle:
-		key = (d.item_code, d.serial_no, d.warehouse)
+		key = (d.item_code, d.serial_number, d.warehouse)
 		if key not in iwb_map:
 			iwb_map[key] = frappe._dict({
 				"total": 0.0
 			})
 
-		qty_dict = iwb_map[(d.item_code, d.serial_no, d.warehouse)]
+		qty_dict = iwb_map[(d.item_code, d.serial_number, d.warehouse)]
 		qty_dict.item_code = d.item_code
-		qty_dict.serial_no = d.serial_no
+		qty_dict.serial_no = d.serial_number
 		qty_dict.warehouse = d.warehouse
 		
 		

@@ -7,7 +7,7 @@
  "doctype": "Report", 
  "idx": 0, 
  "is_standard": "Yes", 
- "modified": "2018-04-20 14:12:46.585875", 
+ "modified": "2018-04-20 15:24:49.965613", 
  "modified_by": "Administrator", 
  "module": "Motoinventory_Tracker", 
  "name": "Daily Stock Report", 
@@ -15,7 +15,7 @@
  "query": "select sn.item_code, sn.name, sn.warehouse from `tabSerial No` sn;", 
  "ref_doctype": "Serial No", 
  "report_name": "Daily Stock Report", 
- "report_type": "Query Report", 
+ "report_type": "Script Report", 
  "roles": [
   {
    "role": "Stock User"
