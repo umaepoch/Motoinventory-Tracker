@@ -56,14 +56,15 @@ def execute(filters=None):
 						data.append([whse_prev, item_prev, serial_prev, ""])
 						data.append(["", item_prev, "", item_count+1])
 					else:
-						data.append(["", item_prev, "", item_count+1])
-						data.append([item_prev, "", "", item_count])
+#						data.append(["", item_prev, "", item_count+1])
+						data.append(["", item_prev, "", item_count])
 
 
 					item_count = 0
 					item_prev = item_work
 					serial_prev = serial_work
 					whse_prev = whse_work
+				whse_count = whse_count + 1
 			else:
 				data.append([whse_prev,"", "", whse_count+1])
 				item_count = 0
