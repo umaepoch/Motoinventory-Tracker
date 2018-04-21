@@ -66,9 +66,10 @@ def execute(filters=None):
 					whse_prev = whse_work
 				whse_count = whse_count + 1
 			else:
-				data.append([whse_prev, item_work, serial_work, ""])
-				data.append(["", item_work, "", item_count])
+				data.append([whse_prev, item_prev, serial_prev, ""])
+				data.append(["", item_prev, "", item_count])
 				data.append([whse_prev,"", "", whse_count])
+				data.append([whse_work, item_work, serial_work, ""])
 				item_count = 1
 				item_prev = item_work
 				serial_prev = serial_work
