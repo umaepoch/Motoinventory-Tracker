@@ -57,6 +57,7 @@ def execute(filters=None):
 						data.append(["", item_prev, "", item_count+1])
 					else:
 #						data.append(["", item_prev, "", item_count+1])
+						data.append([whse_prev, item_prev, serial_prev, ""])
 						data.append(["", item_prev, "", item_count])
 
 
