@@ -65,9 +65,6 @@ def execute(filters=None):
 					serial_prev = serial_work
 					whse_prev = whse_work
 			else:
-				frappe.msgprint(_(whse_prev))
-				frappe.msgprint(_(item_prev))
-				frappe.msgprint(_(whse_count))
 				data.append([whse_prev,"", "", whse_count+1])
 				item_count = 0
 				item_prev = item_work
@@ -75,11 +72,11 @@ def execute(filters=None):
 				whse_prev = whse_work
 				whse_count = 0
 				
-		tot_whse_count = tot_whse_count + 1		
+		total_count = total_count +1		
 
 	data.append([whse_work, item_work, serial_work, ""])
 	data.append([whse_work, "", "", whse_count+1])
-	data.append(["", "", "", tot_whse_count +1])
+	data.append(["", "", "", total_count +1])
 
 	return columns, data
 
