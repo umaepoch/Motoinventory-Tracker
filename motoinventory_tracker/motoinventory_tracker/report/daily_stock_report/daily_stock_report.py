@@ -22,48 +22,64 @@ def execute(filters=None):
 	whse_work = ""
 	serial_prev = ""
 	whse_prev = ""
+	whse_count = 0
+	tot_whse_count = 0
 
 	total_count = 0
 	item_count = 0
-	for (item, warehouse, serial_number) in sorted(iwb_map):
-		qty_dict = iwb_map[(item, warehouse, serial_number)]
-		report_data.append([item, serial_number, warehouse
-		])
+	for (warehouse, item, serial_number) in sorted(iwb_map):
+		qty_dict = iwb_map[(warehouse, item, serial_number)]
+		report_data.append([warehouse, item, serial_number])
 	
 	for rows in report_data:
 		if total_count == 0:
-			item_prev = rows[0]
-			data.append([item_prev, rows[1], rows[2], ""])
+			whse_prev = rows[0]
+			item_prev = rows[1]
+			data.append([whse_prev, item_prev, rows[2], ""])
 			item_count = item_count + 1
+			whse_count = whse_count + 1
 			
 		else:
-			item_work = rows[0]
-			serial_work = rows[1]
-			whse_work = rows[2]
+			whse_work = rows[0]			
+			item_work = rows[1]
+			serial_work = rows[2]
 
-			if item_prev == item_work:
-				data.append([item_prev, rows[1], rows[2], ""])
-				item_count = item_count + 1
+			if whse_prev == whse_work:
+				tot_whse_count = whse_count + 1
 
-			else:
-				if item_count == 0:
-					data.append([item_prev, serial_prev, whse_prev, ""])
-					data.append([item_prev, "", "", item_count+1])
+				if item_prev == item_work:
+					data.append([whse_prev, item_prev, rows[2], ""])
+					item_count = item_count + 1
+
 				else:
-					data.append([item_prev, "", "", item_count])
+					if item_count == 0:
+						data.append([whse_prev, item_prev, serial_prev, ""])
+						data.append(["", item_prev, "", item_count+1])
+					else:
+						data.append(["", item_prev, "", item_count+1])
+						data.append([item_prev, "", "", item_count])
 
+
+					item_count = 0
+					item_prev = item_work
+					serial_prev = serial_work
+					whse_prev = whse_work
+			else:
+				frappe.msgprint(_(whse_prev))
+				frappe.msgprint(_(item_prev))
+				frappe.msgprint(_(whse_count))
+				data.append([whse_prev,"", "", whse_count+1])
 				item_count = 0
 				item_prev = item_work
 				serial_prev = serial_work
 				whse_prev = whse_work
+				whse_count = 0
+				
+		tot_whse_count = tot_whse_count + 1		
 
-		total_count = total_count + 1
-	data.append([item_work, serial_work, whse_work, ""])
-	if item_count == 0:	
-		data.append([item_work, "", "", item_count+1])
-	else:
-		data.append([item_work, "", "", item_count+1])
-
+	data.append([whse_work, item_work, serial_work, ""])
+	data.append([whse_work, "", "", whse_count+1])
+	data.append(["", "", "", tot_whse_count +1])
 
 	return columns, data
 
@@ -71,9 +87,10 @@ def get_columns():
 	"""return columns"""
 
 	columns = [
+		_("Warehouse")+"::150",
 		_("Item")+":Link/Item:120",
 		_("Serial No")+":Link/Serial No:120",
-		_("Warehouse")+"::150",
+		
 		_("Total")+"::100"
 	]
 
@@ -103,13 +120,13 @@ def get_item_warehouse_map(filters):
 	sle = get_stock_ledger_entries(filters)
 
 	for d in sle:
-		key = (d.item_code, d.warehouse, d.serial_number)
+		key = (d.warehouse, d.item_code, d.serial_number)
 		if key not in iwb_map:
 			iwb_map[key] = frappe._dict({
 				"total": 0.0
 			})
 
-		qty_dict = iwb_map[(d.item_code, d.warehouse, d.serial_number)]
+		qty_dict = iwb_map[(d.warehouse, d.item_code, d.serial_number)]
 		qty_dict.item_code = d.item_code
 		qty_dict.serial_no = d.serial_number
 		qty_dict.warehouse = d.warehouse
