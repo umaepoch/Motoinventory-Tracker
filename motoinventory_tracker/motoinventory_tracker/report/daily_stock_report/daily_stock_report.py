@@ -76,8 +76,10 @@ def execute(filters=None):
 				whse_prev = whse_work
 				whse_count = 1
 				
-		total_count = total_count +1		
-	data.append(["", item_work, "", item_count])
+		total_count = total_count +1
+	if whse_count == 1:
+		data.append([whse_work, item_work, serial_work, ""])	
+		data.append(["", item_work, "", item_count])
 #	data.append([whse_work, item_work, serial_work, ""])
 	data.append([whse_work, "", "", whse_count])
 	data.append(["", "", "", total_count])
@@ -112,7 +114,7 @@ def get_stock_ledger_entries(filters):
 	
 	return frappe.db.sql("""
 		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse from `tabSerial No` sn 
-where sn.warehouse is not NULL and sn.warehouse != "Finished Goods - HSR" %s order by sn.item_code""" % conditions, as_dict=1)
+where sn.warehouse is not NULL %s order by sn.item_code""" % conditions, as_dict=1)
 
 	
 def get_item_warehouse_map(filters):
