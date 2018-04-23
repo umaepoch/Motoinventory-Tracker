@@ -22,7 +22,7 @@ def execute(filters=None):
 	whse_work = ""
 	serial_prev = ""
 	whse_prev = ""
-	whse_count = 1
+	whse_count = 0
 	tot_whse_count = 0
 
 	total_count = 0
