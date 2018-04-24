@@ -82,7 +82,7 @@ def execute(filters=None):
 		data.append(["", item_work, "", item_count])
 #	data.append([whse_work, item_work, serial_work, ""])
 	data.append([whse_work, "", "", whse_count])
-	data.append(["", "", "", total_count])
+	data.append(["Total", "", "", total_count])
 
 	return columns, data
 
