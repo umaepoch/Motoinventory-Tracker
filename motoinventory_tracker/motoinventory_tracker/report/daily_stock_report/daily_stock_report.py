@@ -60,6 +60,8 @@ def execute(filters=None):
 			brn_work = rows[4]
 
 			if whse_prev == whse_work:
+				frappe.msgprint(_(whse_prev))
+				frappe.msgprint(_(rows[4]))
 				if rows[4]:
 					tot_alloc_whse_count = tot_alloc_whse_count + 1
 				else:
@@ -88,11 +90,16 @@ def execute(filters=None):
 					vehstatus_prev = vehstatus_work
 					brn_prev = brn_work
 
-				if rows[4]:
+				frappe.msgprint(_(whse_prev))
+				frappe.msgprint(_(item_prev))
+				frappe.msgprint(_(brn_prev))
+				if brn_prev:
 					alloc_whse_count = alloc_whse_count + 1
 				else:
 					unalloc_whse_count = unalloc_whse_count + 1
-	
+
+				frappe.msgprint(_(alloc_whse_count))
+				frappe.msgprint(_(unalloc_whse_count))
 				whse_count = whse_count + 1
 			else:
 				data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
@@ -106,8 +113,8 @@ def execute(filters=None):
 				vehstatus_prev = vehstatus_work
 				brn_prev = brn_work
 				whse_count = 1
-				alloc_whse_count = 1
-				unalloc_whse_count = 1
+				alloc_whse_count = 0
+				unalloc_whse_count = 0
 				
 		total_count = total_count +1
 	if whse_count == 1:
