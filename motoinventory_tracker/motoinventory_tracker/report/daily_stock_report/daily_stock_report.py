@@ -33,7 +33,7 @@ def execute(filters=None):
 	item_count = 1
 	for (warehouse, item, serial_number) in sorted(iwb_map):
 		qty_dict = iwb_map[(warehouse, item, serial_number)]
-		report_data.append([warehouse, item, serial_number, vehicle_status, brn])
+		report_data.append([warehouse, item, serial_number, qty_dict.vehicle_status, qty_dict.brn])
 	
 	for rows in report_data:
 		if total_count == 0:
