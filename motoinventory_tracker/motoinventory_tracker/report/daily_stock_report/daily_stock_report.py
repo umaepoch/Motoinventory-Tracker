@@ -61,6 +61,7 @@ def execute(filters=None):
 			brn_work = rows[4]
 
 			if whse_prev == whse_work:
+				frappe.msgprint(_("Inside 1"))
 				frappe.msgprint(_(whse_prev))
 				frappe.msgprint(_(item_prev))
 				frappe.msgprint(_(brn_prev))
@@ -68,6 +69,7 @@ def execute(filters=None):
 					tot_alloc_whse_count = tot_alloc_whse_count + 1
 				else:
 					tot_unalloc_whse_count = tot_unalloc_whse_count + 1
+
 	
 				tot_whse_count = whse_count + 1
 
@@ -91,7 +93,7 @@ def execute(filters=None):
 					whse_prev = whse_work
 					vehstatus_prev = vehstatus_work
 					brn_prev = brn_work
-
+				frappe.msgprint(_("Inside 2"))
 				frappe.msgprint(_(whse_prev))
 				frappe.msgprint(_(item_prev))
 				frappe.msgprint(_(brn_prev))
@@ -115,7 +117,7 @@ def execute(filters=None):
 				vehstatus_prev = vehstatus_work
 				brn_prev = brn_work
 				whse_count = 1
-				alloc_whse_count = 1
+				alloc_whse_count = 0
 				unalloc_whse_count = 1
 				
 		total_count = total_count +1
