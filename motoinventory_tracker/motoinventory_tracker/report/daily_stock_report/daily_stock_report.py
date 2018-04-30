@@ -65,7 +65,7 @@ def execute(filters=None):
 				frappe.msgprint(_(whse_prev))
 				frappe.msgprint(_(item_prev))
 				frappe.msgprint(_(brn_prev))
-				if brn_prev:
+				if rows[4]:
 					tot_alloc_whse_count = tot_alloc_whse_count + 1
 				else:
 					tot_unalloc_whse_count = tot_unalloc_whse_count + 1
@@ -97,7 +97,7 @@ def execute(filters=None):
 				frappe.msgprint(_(whse_prev))
 				frappe.msgprint(_(item_prev))
 				frappe.msgprint(_(brn_prev))
-				if brn_prev:
+				if rows[4]:
 					alloc_whse_count = alloc_whse_count + 1
 				else:
 					unalloc_whse_count = unalloc_whse_count + 1
