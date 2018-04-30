@@ -61,15 +61,6 @@ def execute(filters=None):
 			brn_work = rows[4]
 
 			if whse_prev == whse_work:
-				frappe.msgprint(_("Inside 1"))
-				frappe.msgprint(_(whse_prev))
-				frappe.msgprint(_(item_prev))
-				frappe.msgprint(_(brn_prev))
-				if rows[4]:
-					tot_alloc_whse_count = tot_alloc_whse_count + 1
-				else:
-					tot_unalloc_whse_count = tot_unalloc_whse_count + 1
-
 	
 				tot_whse_count = whse_count + 1
 
@@ -93,23 +84,19 @@ def execute(filters=None):
 					whse_prev = whse_work
 					vehstatus_prev = vehstatus_work
 					brn_prev = brn_work
-				frappe.msgprint(_("Inside 2"))
-				frappe.msgprint(_(whse_prev))
-				frappe.msgprint(_(item_prev))
-				frappe.msgprint(_(brn_prev))
 				if rows[4]:
 					alloc_whse_count = alloc_whse_count + 1
 				else:
 					unalloc_whse_count = unalloc_whse_count + 1
 
-				frappe.msgprint(_(alloc_whse_count))
-				frappe.msgprint(_(unalloc_whse_count))
 				whse_count = whse_count + 1
 			else:
 				data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
 				data.append(["", item_prev, "", "", "", item_count])
 				data.append([whse_prev, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
 #				data.append([whse_work, item_work, serial_work, ""])
+				tot_alloc_whse_count = tot_alloc_whse_count + alloc_whse_count
+				tot_unalloc_whse_count = tot_unalloc_whse_count + unalloc_whse_count
 				item_count = 1
 				item_prev = item_work
 				serial_prev = serial_work
@@ -124,6 +111,9 @@ def execute(filters=None):
 	if whse_count == 1:
 		data.append([whse_work, item_work, serial_work, vehstatus_work, brn_work, ""])	
 		data.append(["", item_work, "", "", "", item_count])
+		tot_alloc_whse_count = tot_alloc_whse_count + alloc_whse_count
+		tot_unalloc_whse_count = tot_unalloc_whse_count + unalloc_whse_count
+
 #	data.append([whse_work, item_work, serial_work, ""])
 	data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
 	data.append(["Total", "Allocated", tot_alloc_whse_count, "Unallocated", tot_unalloc_whse_count, total_count])
