@@ -61,9 +61,9 @@ def execute(filters=None):
 
 			if whse_prev == whse_work:
 				if rows[4]:
-					tot_alloc_whse_count = alloc_whse_count + 1
+					tot_alloc_whse_count = tot_alloc_whse_count + 1
 				else:
-					tot_unalloc_whse_count = unalloc_whse_count + 1
+					tot_unalloc_whse_count = tot_unalloc_whse_count + 1
 	
 				tot_whse_count = whse_count + 1
 
@@ -87,6 +87,7 @@ def execute(filters=None):
 					whse_prev = whse_work
 					vehstatus_prev = vehstatus_work
 					brn_prev = brn_work
+
 				if rows[4]:
 					alloc_whse_count = alloc_whse_count + 1
 				else:
