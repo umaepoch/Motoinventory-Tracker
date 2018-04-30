@@ -73,6 +73,11 @@ def execute(filters=None):
 					data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 					item_count = item_count + 1
 
+					if brn_prev:
+						alloc_whse_count = alloc_whse_count + 1
+					else:
+						unalloc_whse_count = unalloc_whse_count + 1
+
 				else:
 					if total_count == 1:
 #						data.append([whse_prev, item_prev, serial_prev, ""])
@@ -113,8 +118,8 @@ def execute(filters=None):
 				vehstatus_prev = vehstatus_work
 				brn_prev = brn_work
 				whse_count = 1
-				alloc_whse_count = 0
-				unalloc_whse_count = 0
+				alloc_whse_count = 1
+				unalloc_whse_count = 1
 				
 		total_count = total_count +1
 	if whse_count == 1:
