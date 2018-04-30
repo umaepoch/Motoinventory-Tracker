@@ -44,6 +44,7 @@ def execute(filters=None):
 		if total_count == 0:
 			whse_prev = rows[0]
 			item_prev = rows[1]
+			brn_prev = rows[4]
 			data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 			if rows[4]:
 				alloc_whse_count = alloc_whse_count + 1
@@ -61,8 +62,9 @@ def execute(filters=None):
 
 			if whse_prev == whse_work:
 				frappe.msgprint(_(whse_prev))
-				frappe.msgprint(_(rows[4]))
-				if rows[4]:
+				frappe.msgprint(_(item_prev))
+				frappe.msgprint(_(brn_prev))
+				if brn_prev:
 					tot_alloc_whse_count = tot_alloc_whse_count + 1
 				else:
 					tot_unalloc_whse_count = tot_unalloc_whse_count + 1
@@ -72,11 +74,6 @@ def execute(filters=None):
 				if item_prev == item_work:
 					data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 					item_count = item_count + 1
-
-					if brn_prev:
-						alloc_whse_count = alloc_whse_count + 1
-					else:
-						unalloc_whse_count = unalloc_whse_count + 1
 
 				else:
 					if total_count == 1:
