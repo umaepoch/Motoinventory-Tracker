@@ -22,6 +22,10 @@ def execute(filters=None):
 	whse_work = ""
 	serial_prev = ""
 	whse_prev = ""
+	vehstatus_prev = ""
+	brn_prev = ""
+	vehstatus_work = ""
+	brn_work = ""
 	whse_count = 0
 	tot_whse_count = 0
 
@@ -29,60 +33,66 @@ def execute(filters=None):
 	item_count = 1
 	for (warehouse, item, serial_number) in sorted(iwb_map):
 		qty_dict = iwb_map[(warehouse, item, serial_number)]
-		report_data.append([warehouse, item, serial_number])
+		report_data.append([warehouse, item, serial_number, vehicle_status, brn])
 	
 	for rows in report_data:
 		if total_count == 0:
 			whse_prev = rows[0]
 			item_prev = rows[1]
-			data.append([whse_prev, item_prev, rows[2], ""])
+			data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 			whse_count = whse_count + 1
 			
 		else:
 			whse_work = rows[0]			
 			item_work = rows[1]
 			serial_work = rows[2]
+			vehstatus_work = rows[3]
+			brn_work = rows[4]
 
 			if whse_prev == whse_work:
 				tot_whse_count = whse_count + 1
 
 				if item_prev == item_work:
-					data.append([whse_prev, item_prev, rows[2], ""])
+					data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 					item_count = item_count + 1
 
 				else:
 					if total_count == 1:
 #						data.append([whse_prev, item_prev, serial_prev, ""])
-						data.append(["", item_prev, "", item_count])
+						data.append(["", item_prev, "", "", "", item_count])
 					else:
 #						data.append(["", item_prev, "", item_count+1])
-						data.append([whse_prev, item_prev, serial_prev, ""])
-						data.append(["", item_prev, "", item_count])
+						data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
+						data.append(["", item_prev, "", "", "", item_count])
 
-
+ 
 					item_count = 1
 					item_prev = item_work
 					serial_prev = serial_work
 					whse_prev = whse_work
+					vehstatus_prev = vehstatus_work
+					brn_prev = brn_work
 				whse_count = whse_count + 1
 			else:
-				data.append([whse_prev, item_prev, serial_prev, ""])
-				data.append(["", item_prev, "", item_count])
-				data.append([whse_prev,"", "", whse_count])
+				data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
+				data.append(["", item_prev, "", "", "", item_count])
+				data.append([whse_prev, "", "", "", "", whse_count])
 #				data.append([whse_work, item_work, serial_work, ""])
 				item_count = 1
 				item_prev = item_work
 				serial_prev = serial_work
 				whse_prev = whse_work
+				vehstatus_prev = vehstatus_work
+				brn_prev = brn_work
 				whse_count = 1
 				
 		total_count = total_count +1
 	if whse_count == 1:
-		data.append([whse_work, item_work, serial_work, ""])	
-		data.append(["", item_work, "", item_count])
+		data.append([whse_work, item_work, serial_work, vehstatus_work, brn_work, ""])	
+		data.append(["", item_work, "", "", "", item_count])
 #	data.append([whse_work, item_work, serial_work, ""])
-	data.append([whse_work, "", "", whse_count])
-	data.append(["Total", "", "", total_count])
+	data.append([whse_work, "", "", "", "", whse_count])
+	data.append(["Total", "", "", "", "", total_count])
 
 	return columns, data
 
@@ -93,7 +103,8 @@ def get_columns():
 		_("Warehouse")+"::150",
 		_("Item")+":Link/Item:120",
 		_("Serial No")+":Link/Serial No:120",
-		
+		_("Vehicle Status")+"::120",
+		_("Booking Reference No")+"::120",
 		_("Total")+"::100"
 	]
 
@@ -113,7 +124,7 @@ def get_stock_ledger_entries(filters):
 	join_table_query = ""
 	
 	return frappe.db.sql("""
-		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse from `tabSerial No` sn 
+		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, sn.vehicle_status as vehicle_status, sn.booking_reference_number as brn from `tabSerial No` sn 
 where sn.warehouse is not NULL %s order by sn.item_code""" % conditions, as_dict=1)
 
 	
@@ -133,6 +144,8 @@ def get_item_warehouse_map(filters):
 		qty_dict.item_code = d.item_code
 		qty_dict.serial_no = d.serial_number
 		qty_dict.warehouse = d.warehouse
+		qty_dict.vehicle_status = d.vehicle_status
+		qty_dict.brn = d.brn
 		
 		
 	return iwb_map
