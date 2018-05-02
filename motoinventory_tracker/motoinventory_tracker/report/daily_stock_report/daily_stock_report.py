@@ -126,8 +126,8 @@ def get_columns():
 
 	columns = [
 		_("Warehouse")+"::150",
-		_("Item")+":Link/Item:120",
-		_("Serial No")+":Link/Serial No:120",
+		_("Item")+"::120",
+		_("Serial No")+"::120",
 		_("Vehicle Status")+"::120",
 		_("Booking Reference No")+"::120",
 		_("Total")+"::100"

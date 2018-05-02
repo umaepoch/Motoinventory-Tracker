@@ -45,7 +45,7 @@ def execute(filters=None):
 			whse_prev = rows[0]
 			item_prev = rows[1]
 			brn_prev = rows[4]
-			data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
+#			data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 			if rows[4]:
 				alloc_whse_count = alloc_whse_count + 1
 			else:
@@ -65,17 +65,10 @@ def execute(filters=None):
 				tot_whse_count = whse_count + 1
 
 				if item_prev == item_work:
-					data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
+#					data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], ""])
 					item_count = item_count + 1
 
 				else:
-					if total_count == 1:
-#						data.append([whse_prev, item_prev, serial_prev, ""])
-						data.append(["", item_prev, "", "", "", item_count])
-					else:
-#						data.append(["", item_prev, "", item_count+1])
-						data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
-						data.append(["", item_prev, "", "", "", item_count])
 
  
 					item_count = 1
@@ -91,9 +84,9 @@ def execute(filters=None):
 
 				whse_count = whse_count + 1
 			else:
-				data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
-				data.append(["", item_prev, "", "", "", item_count])
-				data.append([whse_prev, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
+#				data.append([whse_prev, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
+#				data.append(["", item_prev, "", "", "", item_count])
+				data.append([whse_prev, unalloc_whse_count, alloc_whse_count, whse_count])
 #				data.append([whse_work, item_work, serial_work, ""])
 				tot_alloc_whse_count = tot_alloc_whse_count + alloc_whse_count
 				tot_unalloc_whse_count = tot_unalloc_whse_count + unalloc_whse_count
@@ -109,13 +102,13 @@ def execute(filters=None):
 				
 		total_count = total_count +1
 	if whse_count == 1:
-		data.append([whse_work, item_work, serial_work, vehstatus_work, brn_work, ""])	
-		data.append(["", item_work, "", "", "", item_count])
+#		data.append([whse_work, item_work, serial_work, vehstatus_work, brn_work, ""])	
+#		data.append(["", item_work, "", "", "", item_count])
 		tot_alloc_whse_count = tot_alloc_whse_count + alloc_whse_count
 		tot_unalloc_whse_count = tot_unalloc_whse_count + unalloc_whse_count
 
 #	data.append([whse_work, item_work, serial_work, ""])
-	data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
+	data.append([whse_work, unalloc_whse_count, alloc_whse_count, whse_count])
 #	data.append(["Total", "Allocated", tot_alloc_whse_count, "Unallocated", tot_unalloc_whse_count, total_count])
 
 	return columns, data
@@ -126,10 +119,8 @@ def get_columns():
 
 	columns = [
 		_("Warehouse")+"::150",
-		_("Item")+":Link/Item:120",
-		_("Serial No")+":Link/Serial No:120",
-		_("Vehicle Status")+"::120",
-		_("Booking Reference No")+"::120",
+		_("Unallocated")+"::120",
+		_("Allocated")+"::120",
 		_("Total")+"::100"
 	]
 
