@@ -109,7 +109,7 @@ def execute(filters=None):
 
 #	data.append([whse_work, item_work, serial_work, ""])
 	data.append([whse_work, unalloc_whse_count, alloc_whse_count, whse_count])
-#	data.append(["Total", "Allocated", tot_alloc_whse_count, "Unallocated", tot_unalloc_whse_count, total_count])
+	data.append(["Total", tot_unalloc_whse_count, tot_alloc_whse_count, total_count])
 
 	return columns, data
 
@@ -119,9 +119,9 @@ def get_columns():
 
 	columns = [
 		_("Warehouse")+"::150",
-		_("Unallocated")+"::120",
-		_("Allocated")+"::120",
-		_("Total")+"::100"
+		_("Free Stock")+":Int:120",
+		_("Allocated")+":Int:120",
+		_("Total")+":Int:100"
 	]
 
 	return columns
@@ -150,16 +150,17 @@ def get_item_warehouse_map(filters):
 	sle = get_stock_ledger_entries(filters)
 
 	for d in sle:
-		key = (d.warehouse, d.item_code, d.serial_number)
+		warehouse, company = d.warehouse.split('-')
+
+		key = (warehouse, d.item_code, d.serial_number)
 		if key not in iwb_map:
 			iwb_map[key] = frappe._dict({
 				"total": 0.0
 			})
 
-		qty_dict = iwb_map[(d.warehouse, d.item_code, d.serial_number)]
+		qty_dict = iwb_map[(warehouse, d.item_code, d.serial_number)]
 		qty_dict.item_code = d.item_code
 		qty_dict.serial_no = d.serial_number
-		qty_dict.warehouse = d.warehouse
 		qty_dict.vehicle_status = d.vehicle_status
 		qty_dict.brn = d.brn
 		
