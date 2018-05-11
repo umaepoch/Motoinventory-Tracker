@@ -1,0 +1,28 @@
+{
+ "add_total_row": 0, 
+ "apply_user_permissions": 1, 
+ "creation": "2018-05-11 14:51:43.652923", 
+ "disabled": 0, 
+ "docstatus": 0, 
+ "doctype": "Report", 
+ "idx": 0, 
+ "is_standard": "Yes", 
+ "letter_head": "BidadiUT", 
+ "modified": "2018-05-11 14:51:43.652923", 
+ "modified_by": "Administrator", 
+ "module": "Motoinventory_Tracker", 
+ "name": "Daily Stock Balance Report", 
+ "owner": "Administrator", 
+ "query": "select sn.item_code, sn.name, sn.warehouse from `tabSerial No` sn;", 
+ "ref_doctype": "Serial No", 
+ "report_name": "Daily Stock Balance Report", 
+ "report_type": "Script Report", 
+ "roles": [
+  {
+   "role": "Stock User"
+  }, 
+  {
+   "role": "Accounts Manager"
+  }
+ ]
+}
