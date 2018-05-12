@@ -28,21 +28,26 @@ def execute(filters=None):
 	whse_count = 0
 	alloc_whse_count = 0
 	unalloc_whse_count = 0
-
+	in_qty = 0
+	out_qty = 0
+	curr_date = utils.today()
 
 	total_count = 0
 	item_count = 1
 	for (item, vehicle_status, serial_number) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, vehicle_status, serial_number)]
-		report_data.append([item, serial_number, vehicle_status, qty_dict.brn, qty_dict.ddn, qty_dict.del_date, qty_dict.customer])
-	
+		report_data.append([item, serial_number, vehicle_status, qty_dict.brn, qty_dict.crt_date, qty_dict.ddn, qty_dict.del_date, qty_dict.customer])
+	frappe.msgprint(_(curr_date))
+
 	for rows in report_data:
+		frappe.throw(_(rows[4]))
 		if total_count == 0:
 			item_prev = rows[0]
 			brn_prev = rows[3]
 			warehouse = filters.get("warehouse")
 #			open_row = open_stock(warehouse)
-			data.append([warehouse, item_prev, rows[1], rows[2], rows[3], ""])
+			if (curr_date == rows[4]):
+				data.append([warehouse, item_prev, rows[1], rows[2], rows[3], ""])
 			if rows[3]:
 				alloc_whse_count = alloc_whse_count + 1
 			else:
@@ -55,6 +60,7 @@ def execute(filters=None):
 			serial_work = rows[1]
 			vehstatus_work = rows[2]
 			brn_work = rows[3]
+			
 			if item_prev == item_work:
 				data.append([warehouse, item_prev, rows[1], rows[2], rows[3], ""])
 				item_count = item_count + 1
@@ -79,6 +85,7 @@ def execute(filters=None):
 					unalloc_whse_count = unalloc_whse_count + 1
 
 			whse_count = whse_count + 1
+			total_count = total_count + 1
 				
 	data.append([warehouse, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
 
@@ -117,7 +124,7 @@ def get_stock_ledger_entries(filters):
 	join_table_query = ""
 	
 	return frappe.db.sql("""
-		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, sn.vehicle_status as vehicle_status, sn.booking_reference_number as brn, sn.customer, sn.delivery_document_no, sn.delivery_date from `tabSerial No` sn 
+		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, sn.vehicle_status as vehicle_status, sn.booking_reference_number as brn, sn.customer, sn.purchase_date, sn.delivery_document_no, sn.delivery_date from `tabSerial No` sn 
 where sn.warehouse is not NULL %s order by sn.item_code""" % conditions, as_dict=1)
 
 	
@@ -142,6 +149,7 @@ def get_item_warehouse_map(filters):
 		qty_dict.customer = d.customer
 		qty_dict.ddn = d.delivery_document_no
 		qty_dict.del_date = d.delivery_date
+		qty_dict.crt_date = d.purchase_date
 		
 		
 	return iwb_map
