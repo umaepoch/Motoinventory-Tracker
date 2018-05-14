@@ -44,7 +44,7 @@ def execute(filters=None):
 
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
-
+		print sle.item_code
 		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	for rows in data:
@@ -114,7 +114,7 @@ def execute(filters=None):
 		summ_data.append(["", item_work, "", "", "", "", "", item_count])
 
 		summ_data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
-
+		print summ_data
 	return columns, summ_data
 
 def get_columns():
