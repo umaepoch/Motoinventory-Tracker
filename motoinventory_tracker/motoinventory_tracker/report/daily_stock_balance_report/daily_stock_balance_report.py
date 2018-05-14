@@ -40,7 +40,6 @@ def execute(filters=None):
 	frappe.msgprint(_(curr_date))
 
 	for rows in report_data:
-		frappe.throw(_(rows[4]))
 		if total_count == 0:
 			item_prev = rows[0]
 			brn_prev = rows[3]
