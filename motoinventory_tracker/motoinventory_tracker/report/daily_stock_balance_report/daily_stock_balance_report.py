@@ -48,8 +48,10 @@ def execute(filters=None):
 		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	for rows in data:
-#		print rows
 		if total_count == 0:
+			print "Item: ", rows[0]
+			print "Serial No: ", rows[4]
+
 			item_prev = rows[0]
 			whse_prev = rows[1]
 			vtype_prev = rows[2]
@@ -67,6 +69,10 @@ def execute(filters=None):
 			whse_count = whse_count + 1
 			
 		else:
+			print "Item: ", rows[0]
+			print "Serial No: ", rows[4]
+			print "BRN: ", rows[6]
+
 			item_work = rows[0]
 			whse_work = rows[1]			
 			vtype_work = rows[2]
