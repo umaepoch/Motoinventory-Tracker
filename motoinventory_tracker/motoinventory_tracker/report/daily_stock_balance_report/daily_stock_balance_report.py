@@ -127,8 +127,7 @@ def get_columns():
 		_("Serial #") + ":Link/Serial No:100",
 		_("Vehicle Status") +"::100",
 		_("Booking Reference")+"::100",
-		_("Qty") + ":Int:50", 
-		_("Balance Qty") + ":Int:100"
+		_("Qty") + ":Int:50"
 
 
 	]
