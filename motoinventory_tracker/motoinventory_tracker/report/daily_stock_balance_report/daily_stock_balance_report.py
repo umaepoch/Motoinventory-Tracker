@@ -82,7 +82,7 @@ def get_stock_ledger_entries(filters, items):
 			posting_date between %(from_date)s and %(to_date)s
 			{sle_conditions}
 			{item_conditions_sql}
-			order by posting_date asc, posting_time asc, sle.item_code asc"""\
+			order by sle.item_code asc, posting_date asc, posting_time asc,"""\
 		.format(
 			sle_conditions=get_sle_conditions(filters),
 			item_conditions_sql = item_conditions_sql
@@ -157,7 +157,7 @@ def get_opening_balance(filters, columns):
 def get_warehouse_condition(warehouse):
 	warehouse_details = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt"], as_dict=1)
 	if warehouse_details:
-		return " exists (select name from `tabWarehouse` wh \
+		return " exists (select wh.name from `tabWarehouse` wh \
 			where wh.lft >= %s and wh.rgt <= %s and warehouse = wh.name)"%(warehouse_details.lft,
 			warehouse_details.rgt)
 
