@@ -9,7 +9,6 @@ def execute(filters=None):
 	columns = get_columns()
 	items = get_items(filters)
 	sl_entries = get_stock_ledger_entries(filters, items)
-	frappe.msgprint(_(sl_entries))
 	item_details = get_item_details(items, sl_entries)
 	opening_row = get_opening_balance(filters, columns)
 
@@ -49,6 +48,7 @@ def execute(filters=None):
 		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	for rows in data:
+		print rows
 		if total_count == 0:
 			item_prev = rows[0]
 			whse_prev = rows[1]
