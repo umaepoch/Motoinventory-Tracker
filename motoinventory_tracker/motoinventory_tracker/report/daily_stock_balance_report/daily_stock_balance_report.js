@@ -22,7 +22,8 @@ frappe.query_reports["Daily Stock Balance Report"] = {
 			"fieldname":"warehouse",
 			"label": __("Warehouse"),
 			"fieldtype": "Link",
-			"options": "Warehouse"
+			"options": "Warehouse",
+			"reqd": 1
 		},
 		{
 			"fieldname":"item_code",
