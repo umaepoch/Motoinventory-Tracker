@@ -12,9 +12,6 @@ def execute(filters=None):
 	item_details = get_item_details(items, sl_entries)
 	opening_row = get_opening_balance(filters, columns)
 
-	sl_entries = []
-	item_details = []
-
 	data = []
 	summ_data = []
 	data = []
