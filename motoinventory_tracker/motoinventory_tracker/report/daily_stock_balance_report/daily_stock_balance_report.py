@@ -13,45 +13,98 @@ def execute(filters=None):
 	opening_row = get_opening_balance(filters, columns)
 
 	data = []
+	summ_data = []
+	data = []
+	item_prev = ""
+	item_work = ""
+	serial_work = ""
+	serial_prev = ""
+	vehstatus_prev = ""
+	brn_prev = ""
+	vehstatus_work = ""
+	brn_work = ""
+	alloc_whse_count = 0
+	unalloc_whse_count = 0
+
+	tot_whse_count = 0
+	total_count = 0
+	item_count = 1
+
 	if opening_row:
 		data.append(opening_row)
 
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
 
-#		data.append([sle.date, sle.item_code, item_detail.item_name, item_detail.item_group,
-#			item_detail.brand, item_detail.description, sle.warehouse,
-#			item_detail.stock_uom, sle.actual_qty, sle.qty_after_transaction,
-#			(sle.incoming_rate if sle.actual_qty > 0 else 0.0),
-#			sle.valuation_rate, sle.stock_value, sle.voucher_type, sle.voucher_no,
-#			sle.batch_no, sle.serial_no, sle.project, sle.company])
-
 		data.append([sle.item_code, 
 			sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.brn,
 			sle.actual_qty, sle.qty_after_transaction])
+
+	for rows in data:
+		if total_count == 0:
+			item_prev = rows[0]
+			whse_prev = rows[1]
+			vtype_prev = rows[2]
+			vouch_prev = rows[3]
+			serial_prev = rows[4]
+			vehstatus_prev = rows[5]
+			brn_prev = rows[6]
+
+			data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
+			if rows[6]:
+				alloc_whse_count = alloc_whse_count + 1
+			else:
+				unalloc_whse_count = unalloc_whse_count + 1
+
+			whse_count = whse_count + 1
+			
+		else:
+			item_work = rows[0]
+			whse_work = rows[1]			
+			vtype_work = rows[2]
+			vouch_work = rows[3]
+			serial_work = rows[4]
+			vehstatus_work = rows[5]
+			brn_work = rows[6]
+
+			if item_prev == item_work:
+				data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
+				item_count = item_count + 1
+
+			else:
+				if total_count == 1:
+					data.append(["", item_prev, "", "", "", "", "", item_count])
+				else:
+					data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, ""])
+					data.append(["", item_prev, "", "", "", "", "", item_count])
+
+ 
+				item_count = 1
+				item_prev = item_work
+				serial_prev = serial_work
+				whse_prev = whse_work
+				vehstatus_prev = vehstatus_work
+				brn_prev = brn_work
+				vtype_prev = vtype_work
+				vouch_prev = vouch_work
+			if rows[6]:
+				alloc_whse_count = alloc_whse_count + 1
+			else:
+				unalloc_whse_count = unalloc_whse_count + 1
+
+			whse_count = whse_count + 1
+			
+		total_count = total_count +1
+
+		data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, ""])	
+		data.append(["", item_work, "", "", "", "", "", item_count])
+
+		data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
 
 	return columns, data
 
 def get_columns():
 	columns = [
-#		_("Date") + ":Datetime:95", _("Item") + ":Link/Item:130",
-#		_("Item Name") + "::100", _("Item Group") + ":Link/Item Group:100",
-#		_("Brand") + ":Link/Brand:100", _("Description") + "::200",
-#		_("Warehouse") + ":Link/Warehouse:100", _("Stock UOM") + ":Link/UOM:100",
-#		_("Qty") + ":Float:50", _("Balance Qty") + ":Float:100",
-#		{"label": _("Incoming Rate"), "fieldtype": "Currency", "width": 110,
-#			"options": "Company:company:default_currency"},
-#		{"label": _("Valuation Rate"), "fieldtype": "Currency", "width": 110,
-#			"options": "Company:company:default_currency"},
-#		{"label": _("Balance Value"), "fieldtype": "Currency", "width": 110,
-#			"options": "Company:company:default_currency"},
-#		_("Voucher Type") + "::110",
-#		_("Voucher #") + ":Dynamic Link/" + _("Voucher Type") + ":100",
-#		_("Batch") + ":Link/Batch:100",
-#		_("Serial #") + ":Link/Serial No:100",
-#		_("Project") + ":Link/Project:100",
-#		{"label": _("Company"), "fieldtype": "Link", "width": 110,
-#			"options": "company", "fieldname": "company"}
 
 		_("Item") + ":Link/Item:130",
 		_("Warehouse") + ":Link/Warehouse:100", 
@@ -61,7 +114,7 @@ def get_columns():
 		_("Vehicle Status") +"::100",
 		_("Booking Reference")+"::100",
 		_("Qty") + ":Int:50", 
-		_("Balance Qty") + ":Int:100",
+		_("Balance Qty") + ":Int:100"
 
 
 	]
