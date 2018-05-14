@@ -113,8 +113,8 @@ def execute(filters=None):
 		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, ""])	
 		summ_data.append(["", item_work, "", "", "", "", "", item_count])
 
-		summ_data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
-
+		summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "Unallocated", unalloc_whse_count, whse_count])
+	frappe.msgprint(_(summ_data))
 	return columns, summ_data
 
 def get_columns():
