@@ -109,7 +109,7 @@ def execute(filters=None):
 
 		summ_data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
 
-	return columns, data
+	return columns, summ_data
 
 def get_columns():
 	columns = [
