@@ -58,7 +58,7 @@ def execute(filters=None):
 			vehstatus_prev = rows[5]
 			brn_prev = rows[6]
 
-			data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
+			summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
 			if rows[6]:
 				alloc_whse_count = alloc_whse_count + 1
 			else:
@@ -76,15 +76,15 @@ def execute(filters=None):
 			brn_work = rows[6]
 
 			if item_prev == item_work:
-				data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
 				item_count = item_count + 1
 
 			else:
 				if total_count == 1:
-					data.append(["", item_prev, "", "", "", "", "", item_count])
+					summ_data.append(["", item_prev, "", "", "", "", "", item_count])
 				else:
-					data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, ""])
-					data.append(["", item_prev, "", "", "", "", "", item_count])
+					summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, ""])
+					summ_data.append(["", item_prev, "", "", "", "", "", item_count])
 
  
 				item_count = 1
@@ -104,10 +104,10 @@ def execute(filters=None):
 			
 		total_count = total_count +1
 
-		data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, ""])	
-		data.append(["", item_work, "", "", "", "", "", item_count])
+		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, ""])	
+		summ_data.append(["", item_work, "", "", "", "", "", item_count])
 
-		data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
+		summ_data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
 
 	return columns, data
 
