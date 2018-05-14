@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _, msgprint
+from frappe import _, msgprint, throw
 
 def execute(filters=None):
 	columns = get_columns()
@@ -114,7 +114,7 @@ def execute(filters=None):
 		summ_data.append(["", item_work, "", "", "", "", "", item_count])
 
 		summ_data.append([whse_work, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
-		print summ_data
+	frappe.throw(_(summ_data))
 	return columns, summ_data
 
 def get_columns():
