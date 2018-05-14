@@ -56,12 +56,12 @@ def get_columns():
 		_("Item") + ":Link/Item:130",
 		_("Warehouse") + ":Link/Warehouse:100", 
 		_("Voucher Type") + "::110",
-		_("Voucher #") + ":Dynamic Link/" + 
+		_("Voucher #") + "::100",
 		_("Serial #") + ":Link/Serial No:100",
 		_("Vehicle Status") +"::100",
 		_("Booking Reference")+"::100",
-		_("Qty") + ":Float:50", 
-		_("Balance Qty") + ":Float:100",
+		_("Qty") + ":Int:50", 
+		_("Balance Qty") + ":Int:100",
 
 
 	]
