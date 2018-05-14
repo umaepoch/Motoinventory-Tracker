@@ -23,6 +23,7 @@ def execute(filters=None):
 	brn_prev = ""
 	vehstatus_work = ""
 	brn_work = ""
+	whse_count = 0
 	alloc_whse_count = 0
 	unalloc_whse_count = 0
 
