@@ -12,24 +12,35 @@ def execute(filters=None):
 	item_details = get_item_details(items, sl_entries)
 	opening_row = get_opening_balance(filters, columns)
 
+	sl_entries = []
+	item_details = []
+
 	data = []
 	summ_data = []
 	data = []
 	item_prev = ""
-	item_work = ""
-	serial_work = ""
 	serial_prev = ""
 	vehstatus_prev = ""
+	vtype_prev = ""
+	vouch_prev = ""
 	brn_prev = ""
+	whse_prev = ""
+
+	item_work = ""
+	serial_work = ""
 	vehstatus_work = ""
+	vtype_work = ""
+	vouch_work = ""
 	brn_work = ""
-	whse_count = 0
+	whse_work = ""
+
 	alloc_whse_count = 0
 	unalloc_whse_count = 0
 
 	tot_whse_count = 0
 	total_count = 0
 	item_count = 1
+	whse_count = 0
 
 	if opening_row:
 		data.append(opening_row)
