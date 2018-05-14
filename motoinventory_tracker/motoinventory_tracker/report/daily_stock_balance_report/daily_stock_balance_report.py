@@ -37,7 +37,6 @@ def execute(filters=None):
 	for (item, vehicle_status, serial_number) in sorted(iwb_map):
 		qty_dict = iwb_map[(item, vehicle_status, serial_number)]
 		report_data.append([item, serial_number, vehicle_status, qty_dict.brn, qty_dict.crt_date, qty_dict.ddn, qty_dict.del_date, qty_dict.customer])
-	frappe.msgprint(_(curr_date))
 
 	for rows in report_data:
 		if total_count == 0:
