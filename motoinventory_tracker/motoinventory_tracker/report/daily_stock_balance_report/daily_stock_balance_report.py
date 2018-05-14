@@ -3,12 +3,13 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _
+from frappe import _, msgprint
 
 def execute(filters=None):
 	columns = get_columns()
 	items = get_items(filters)
 	sl_entries = get_stock_ledger_entries(filters, items)
+	frappe.msgprint(_(sl_entries))
 	item_details = get_item_details(items, sl_entries)
 	opening_row = get_opening_balance(filters, columns)
 
@@ -45,9 +46,7 @@ def execute(filters=None):
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
 
-		data.append([sle.item_code, 
-			sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.brn,
-			sle.actual_qty, sle.qty_after_transaction])
+		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	for rows in data:
 		if total_count == 0:
@@ -138,7 +137,7 @@ def get_stock_ledger_entries(filters, items):
 
 	return frappe.db.sql("""select concat_ws(" ", posting_date, posting_time) as date,
 			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
-			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number as brn
+			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
 		from `tabStock Ledger Entry` sle, `tabSerial No` sn
 		where sle.serial_no = sn.name and
 			posting_date between %(from_date)s and %(to_date)s
