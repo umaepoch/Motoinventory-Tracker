@@ -5,14 +5,6 @@
 frappe.query_reports["Daily Stock Balance Report"] = {
 	"filters": [
 		{
-			"fieldname": "warehouse",
-			"label": __("Warehouse"),
-			"fieldtype": "Link",
-			"width": "80",
-			"options": "Warehouse",
-			"reqd": 1
-		},
-		{
 			"fieldname":"from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
@@ -26,6 +18,22 @@ frappe.query_reports["Daily Stock Balance Report"] = {
 			"default": frappe.datetime.get_today(),
 			"reqd": 1
 		},
-
+		{
+			"fieldname":"warehouse",
+			"label": __("Warehouse"),
+			"fieldtype": "Link",
+			"options": "Warehouse"
+		},
+		{
+			"fieldname":"item_code",
+			"label": __("Item"),
+			"fieldtype": "Link",
+			"options": "Item",
+			"get_query": function() {
+				return {
+					query: "erpnext.controllers.queries.item_query"
+				}
+			}
+		}
 	]
 }

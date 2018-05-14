@@ -3,176 +3,156 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _, msgprint, utils, throw
-from frappe.utils import flt, cint, getdate, datetime
-from datetime import datetime, timedelta
+from frappe import _
 
 def execute(filters=None):
-	if not filters: filters = {}
-
 	columns = get_columns()
-	item_map = get_item_details(filters)
-	iwb_map = get_item_warehouse_map(filters)
-#	opening_row = get_opening_balance(filters, columns)
+	items = get_items(filters)
+	sl_entries = get_stock_ledger_entries(filters, items)
+	item_details = get_item_details(items, sl_entries)
+	opening_row = get_opening_balance(filters, columns)
 
-	report_data = []
 	data = []
-	item_prev = ""
-	item_work = ""
-	serial_work = ""
-	serial_prev = ""
-	vehstatus_prev = ""
-	brn_prev = ""
-	vehstatus_work = ""
-	brn_work = ""
-	whse_count = 0
-	alloc_whse_count = 0
-	unalloc_whse_count = 0
-	in_qty = 0
-	out_qty = 0
-	curr_date = utils.today()
+	if opening_row:
+		data.append(opening_row)
 
-	total_count = 0
-	item_count = 1
-	for (item, vehicle_status, serial_number) in sorted(iwb_map):
-		qty_dict = iwb_map[(item, vehicle_status, serial_number)]
-		report_data.append([item, serial_number, vehicle_status, qty_dict.brn, qty_dict.crt_date, qty_dict.ddn, qty_dict.del_date, qty_dict.customer])
+	for sle in sl_entries:
+		item_detail = item_details[sle.item_code]
 
-	for rows in report_data:
-		if total_count == 0:
-			item_prev = rows[0]
-			brn_prev = rows[3]
-			warehouse = filters.get("warehouse")
-#			open_row = open_stock(warehouse)
-			if (curr_date == rows[4]):
-				data.append([warehouse, item_prev, rows[1], rows[2], rows[3], ""])
-			if rows[3]:
-				alloc_whse_count = alloc_whse_count + 1
-			else:
-				unalloc_whse_count = unalloc_whse_count + 1
+#		data.append([sle.date, sle.item_code, item_detail.item_name, item_detail.item_group,
+#			item_detail.brand, item_detail.description, sle.warehouse,
+#			item_detail.stock_uom, sle.actual_qty, sle.qty_after_transaction,
+#			(sle.incoming_rate if sle.actual_qty > 0 else 0.0),
+#			sle.valuation_rate, sle.stock_value, sle.voucher_type, sle.voucher_no,
+#			sle.batch_no, sle.serial_no, sle.project, sle.company])
 
-			whse_count = whse_count + 1
-			
-		else:
-			item_work = rows[0]
-			serial_work = rows[1]
-			vehstatus_work = rows[2]
-			brn_work = rows[3]
-			
-			if item_prev == item_work:
-				data.append([warehouse, item_prev, rows[1], rows[2], rows[3], ""])
-				item_count = item_count + 1
-
-			else:
-				if total_count == 1:
-					data.append(["", item_prev, "", "", "", item_count])
-				else:
-					data.append([warehouse, item_prev, serial_prev, vehstatus_prev, brn_prev, ""])
-					data.append(["", item_prev, "", "", "", item_count])
-
- 
-				item_count = 1
-				item_prev = item_work
-				serial_prev = serial_work
-				vehstatus_prev = vehstatus_work
-				brn_prev = brn_work
-			
-				if rows[4]:
-					alloc_whse_count = alloc_whse_count + 1
-				else:
-					unalloc_whse_count = unalloc_whse_count + 1
-
-			whse_count = whse_count + 1
-			total_count = total_count + 1
-				
-	data.append([warehouse, "Allocated", alloc_whse_count, "Unallocated", unalloc_whse_count, whse_count])
+		data.append([sle.item_code, 
+			sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.brn,
+			sle.actual_qty, sle.qty_after_transaction])
 
 	return columns, data
 
-
 def get_columns():
-	"""return columns"""
-
 	columns = [
-		_("Warehouse")+"::150",
-		_("Item")+"::120",
-		_("Serial No")+"::120",
-		_("Vehicle Status")+"::120",
-		_("Booking Reference No")+"::120",
-#		_("Customer")+"::120",
-#		_("In Qty")+"::120",
-#		_("Out Qty")+"::120",
-#		_("Bal Qty")+"::120",
-		_("Total")+"::100"
+#		_("Date") + ":Datetime:95", _("Item") + ":Link/Item:130",
+#		_("Item Name") + "::100", _("Item Group") + ":Link/Item Group:100",
+#		_("Brand") + ":Link/Brand:100", _("Description") + "::200",
+#		_("Warehouse") + ":Link/Warehouse:100", _("Stock UOM") + ":Link/UOM:100",
+#		_("Qty") + ":Float:50", _("Balance Qty") + ":Float:100",
+#		{"label": _("Incoming Rate"), "fieldtype": "Currency", "width": 110,
+#			"options": "Company:company:default_currency"},
+#		{"label": _("Valuation Rate"), "fieldtype": "Currency", "width": 110,
+#			"options": "Company:company:default_currency"},
+#		{"label": _("Balance Value"), "fieldtype": "Currency", "width": 110,
+#			"options": "Company:company:default_currency"},
+#		_("Voucher Type") + "::110",
+#		_("Voucher #") + ":Dynamic Link/" + _("Voucher Type") + ":100",
+#		_("Batch") + ":Link/Batch:100",
+#		_("Serial #") + ":Link/Serial No:100",
+#		_("Project") + ":Link/Project:100",
+#		{"label": _("Company"), "fieldtype": "Link", "width": 110,
+#			"options": "company", "fieldname": "company"}
+
+		_("Item") + ":Link/Item:130",
+		_("Warehouse") + ":Link/Warehouse:100", 
+		_("Voucher Type") + "::110",
+		_("Voucher #") + ":Dynamic Link/" + 
+		_("Serial #") + ":Link/Serial No:100",
+		_("Vehicle Status") +"::100",
+		_("Booking Reference")+"::100",
+		_("Qty") + ":Float:50", 
+		_("Balance Qty") + ":Float:100",
+
+
 	]
 
 	return columns
 
-def get_conditions(filters):
-	conditions = ""
+def get_stock_ledger_entries(filters, items):
+	item_conditions_sql = ''
+	if items:
+		item_conditions_sql = 'and sle.item_code in ({})'\
+			.format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items]))
 
-	if filters.get("warehouse"):
-		conditions = " and sn.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
+	return frappe.db.sql("""select concat_ws(" ", posting_date, posting_time) as date,
+			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
+			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number as brn
+		from `tabStock Ledger Entry` sle, `tabSerial No` sn
+		where sle.serial_no = sn.name and
+			posting_date between %(from_date)s and %(to_date)s
+			{sle_conditions}
+			{item_conditions_sql}
+			order by posting_date asc, posting_time asc, sle.item_code asc"""\
+		.format(
+			sle_conditions=get_sle_conditions(filters),
+			item_conditions_sql = item_conditions_sql
+		), filters, as_dict=1)
 
-	return conditions
-
-def get_stock_ledger_entries(filters):
-	conditions = get_conditions(filters)
-	
-	join_table_query = ""
-	
-	return frappe.db.sql("""
-		select sn.item_code as item_code, sn.name as serial_number, sn.warehouse as warehouse, sn.vehicle_status as vehicle_status, sn.booking_reference_number as brn, sn.customer, sn.purchase_date, sn.delivery_document_no, sn.delivery_date from `tabSerial No` sn 
-where sn.warehouse is not NULL %s order by sn.item_code""" % conditions, as_dict=1)
-
-	
-def get_item_warehouse_map(filters):
-	iwb_map = {}
-
-	sle = get_stock_ledger_entries(filters)
-
-	for d in sle:
-		key = (d.item_code, d.vehicles_status, d.serial_number)
-		if key not in iwb_map:
-			iwb_map[key] = frappe._dict({
-				"total": 0.0
-			})
-
-		qty_dict = iwb_map[(d.item_code, d.vehicles_status, d.serial_number)]
-		qty_dict.item_code = d.item_code
-		qty_dict.serial_no = d.serial_number
-		qty_dict.warehouse = d.warehouse
-		qty_dict.vehicle_status = d.vehicle_status
-		qty_dict.brn = d.brn
-		qty_dict.customer = d.customer
-		qty_dict.ddn = d.delivery_document_no
-		qty_dict.del_date = d.delivery_date
-		qty_dict.crt_date = d.purchase_date
-		
-		
-	return iwb_map
-	
-
-def get_item_details(filters):
-	condition = ''
-	value = ()
+def get_items(filters):
+	conditions = []
 	if filters.get("item_code"):
-		condition = "where item_code=%s"
-		value = (filters.get("item_code"),)
+		conditions.append("item.name=%(item_code)s")
+	else:
+		if filters.get("brand"):
+			conditions.append("item.brand=%(brand)s")
+		if filters.get("item_group"):
+			conditions.append(get_item_group_condition(filters.get("item_group")))
 
-	items = frappe.db.sql("""
-		select name, item_name, stock_uom, item_group, brand, description
-		from tabItem
-		{condition}
-	""".format(condition=condition), value, as_dict=1)
+	items = []
+	if conditions:
+		items = frappe.db.sql_list("""select name from `tabItem` item where {}"""
+			.format(" and ".join(conditions)), filters)
+	return items
 
-	item_details = dict((d.name , d) for d in items)
+def get_item_details(items, sl_entries):
+	item_details = {}
+	if not items:
+		items = list(set([d.item_code for d in sl_entries]))
 
+	if not items:
+		return item_details
+
+	for item in frappe.db.sql("""
+		select name, item_name, description, item_group, brand, stock_uom
+		from `tabItem`
+		where name in ({0})
+		""".format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items])), as_dict=1):
+			item_details.setdefault(item.name, item)
 
 	return item_details
 
+def get_sle_conditions(filters):
+	conditions = []
+	if filters.get("warehouse"):
+		warehouse_condition = get_warehouse_condition(filters.get("warehouse"))
+		if warehouse_condition:
+			conditions.append(warehouse_condition)
+	if filters.get("voucher_no"):
+		conditions.append("voucher_no=%(voucher_no)s")
+	if filters.get("batch_no"):
+		conditions.append("batch_no=%(batch_no)s")
+	if filters.get("project"):
+		conditions.append("project=%(project)s")
 
+	return "and {}".format(" and ".join(conditions)) if conditions else ""
 
+def get_opening_balance(filters, columns):
+	if not (filters.item_code and filters.warehouse and filters.from_date):
+		return
+
+	from erpnext.stock.stock_ledger import get_previous_sle
+	last_entry = get_previous_sle({
+		"item_code": filters.item_code,
+		"warehouse_condition": get_warehouse_condition(filters.warehouse),
+		"posting_date": filters.from_date,
+		"posting_time": "00:00:00"
+	})
+	row = [""]*len(columns)
+	row[1] = _("'Opening'")
+	for i, v in ((9, 'qty_after_transaction'), (11, 'valuation_rate'), (12, 'stock_value')):
+			row[i] = last_entry.get(v, 0)
+
+	return row
 
 def get_warehouse_condition(warehouse):
 	warehouse_details = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt"], as_dict=1)
@@ -183,3 +163,11 @@ def get_warehouse_condition(warehouse):
 
 	return ''
 
+def get_item_group_condition(item_group):
+	item_group_details = frappe.db.get_value("Item Group", item_group, ["lft", "rgt"], as_dict=1)
+	if item_group_details:
+		return "item.item_group in (select ig.name from `tabItem Group` ig \
+			where ig.lft >= %s and ig.rgt <= %s and item.item_group = ig.name)"%(item_group_details.lft,
+			item_group_details.rgt)
+
+	return ''
