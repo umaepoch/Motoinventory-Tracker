@@ -39,8 +39,8 @@ def execute(filters=None):
 	item_count = 1
 	whse_count = 0
 
-	if opening_row:
-		data.append(opening_row)
+#	if opening_row:
+#		data.append(opening_row)
 
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
@@ -48,7 +48,7 @@ def execute(filters=None):
 		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	for rows in data:
-		print rows
+#		print rows
 		if total_count == 0:
 			item_prev = rows[0]
 			whse_prev = rows[1]
