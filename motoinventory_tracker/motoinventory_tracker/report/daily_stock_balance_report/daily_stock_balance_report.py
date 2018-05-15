@@ -98,15 +98,15 @@ def execute(filters=None):
 
 			else:
 #				if total_count == 1:
-				summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, item_count])
+				summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
 #				else:
-#					if qty_prev > 0:
-#						in_item_count = in_item_count + 1
-#						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, qty_prev, "", ""])
-#					else:
-#						out_item_count = out_item_count + 1
-#						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, "", qty_prev, ""])
-#					summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, item_count])
+				if qty_prev > 0:
+					in_item_count = in_item_count + 1
+					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, qty_work, "", ""])
+				else:
+					out_item_count = out_item_count + 1
+					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
+#					summ_data.append(["", item_pr, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
 				item_count = 1
@@ -136,7 +136,7 @@ def execute(filters=None):
 		out_item_count = out_item_count + 1
 		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
 
-		summ_data.append(["", item_work, "", "", "", "", "", in_item_count, out_item_count, item_count])
+		summ_data.append(["", item_work, "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
 
 	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "Unallocated", "", unalloc_whse_count, whse_count])
 	
