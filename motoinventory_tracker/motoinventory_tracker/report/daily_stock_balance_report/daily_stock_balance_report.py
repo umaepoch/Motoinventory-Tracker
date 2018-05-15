@@ -54,7 +54,7 @@ def execute(filters=None):
 
 	total_count = 0
 	item_count = 1
-	in_item_count = 1
+	in_item_count = 0
 	out_item_count = 0
 	whse_count = 0
 	in_whse_count = 0
@@ -116,6 +116,12 @@ def execute(filters=None):
 
 
 			else:
+				if item_count == 1:
+					if qty_prev >0:
+						in_item_count = in_item_count + 1
+					else:
+						out_item_count = out_item_count + 1
+
 				summ_data.append(["", item_prev, "", "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
 				opening_qty = get_opening_balance(item_work, filters)
 				summ_data.append([whse_prev, item_work, "", "", "", "", "", opening_qty, "", "", ""])
