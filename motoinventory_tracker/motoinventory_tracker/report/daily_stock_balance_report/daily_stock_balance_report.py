@@ -22,6 +22,7 @@ def execute(filters=None):
 	vouch_prev = ""
 	brn_prev = ""
 	whse_prev = ""
+	qty_prev = 0
 
 	item_work = ""
 	serial_work = ""
@@ -30,27 +31,28 @@ def execute(filters=None):
 	vouch_work = ""
 	brn_work = ""
 	whse_work = ""
+	qty_work = 0
 
 	alloc_whse_count = 0
 	unalloc_whse_count = 0
 
-	tot_whse_count = 0
 	total_count = 0
 	item_count = 1
+	in_item_count = 0
+	out_item_count = 0
 	whse_count = 0
+	in_whse_count = 0
+	out_whse_count = 0
 
 #	if opening_row:
 #		data.append(opening_row)
 
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
-		print sle.item_code
 		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	for rows in data:
 		if total_count == 0:
-			print "Item: ", rows[0]
-			print "Serial No: ", rows[4]
 
 			item_prev = rows[0]
 			whse_prev = rows[1]
@@ -59,20 +61,22 @@ def execute(filters=None):
 			serial_prev = rows[4]
 			vehstatus_prev = rows[5]
 			brn_prev = rows[6]
+			qty_prev = rows[7]
 
-			summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
 			if rows[6]:
 				alloc_whse_count = alloc_whse_count + 1
 			else:
 				unalloc_whse_count = unalloc_whse_count + 1
 
 			whse_count = whse_count + 1
+			if qty_prev > 0:
+				in_item_count = in_item_count + 1
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7]], "", "")
+			else:
+				out_item_count = out_item_count + 1
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], ""])
 			
 		else:
-			print "Item: ", rows[0]
-			print "Serial No: ", rows[4]
-			print "BRN: ", rows[6]
-
 			item_work = rows[0]
 			whse_work = rows[1]			
 			vtype_work = rows[2]
@@ -80,20 +84,34 @@ def execute(filters=None):
 			serial_work = rows[4]
 			vehstatus_work = rows[5]
 			brn_work = rows[6]
+			qty_work = rows[7]
 
 			if item_prev == item_work:
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], ""])
 				item_count = item_count + 1
+				if qty_work > 0:
+					in_item_count = in_item_count + 1
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], "", ""])
+				else:
+					out_item_count = out_item_count + 1
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], ""])
+
 
 			else:
 				if total_count == 1:
-					summ_data.append(["", item_prev, "", "", "", "", "", item_count])
+					summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, item_count])
 				else:
-					summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, ""])
-					summ_data.append(["", item_prev, "", "", "", "", "", item_count])
+					if qty_prev > 0:
+						in_item_count = in_item_count + 1
+						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, rows[7], "", ""])
+					else:
+						out_item_count = out_item_count + 1
+						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, "", rows[7], ""])
+					summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
 				item_count = 1
+				in_item_count = 0
+				out_item_count = 0
 				item_prev = item_work
 				serial_prev = serial_work
 				whse_prev = whse_work
@@ -101,6 +119,7 @@ def execute(filters=None):
 				brn_prev = brn_work
 				vtype_prev = vtype_work
 				vouch_prev = vouch_work
+				qty_prev = qty_work
 			if rows[6]:
 				alloc_whse_count = alloc_whse_count + 1
 			else:
@@ -110,10 +129,16 @@ def execute(filters=None):
 			
 		total_count = total_count +1
 
-	summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, ""])	
-	summ_data.append(["", item_work, "", "", "", "", "", item_count])
+	if qty_work > 0:
+		in_item_count = in_item_count + 1
+		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, qty_work, "", ""])	
+	else:
+		out_item_count = out_item_count + 1
+		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
 
-	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "Unallocated", unalloc_whse_count, whse_count])
+		summ_data.append(["", item_work, "", "", "", "", "", in_item_count, out_item_count, item_count])
+
+	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "Unallocated", "", unalloc_whse_count, whse_count])
 	
 	return columns, summ_data
 
@@ -127,7 +152,9 @@ def get_columns():
 		_("Serial #") + ":Link/Serial No:100",
 		_("Vehicle Status") +"::100",
 		_("Booking Reference")+"::100",
-		_("Qty") + ":Int:50"
+		_("In Qty")+"::100",
+		_("Out Qty")+"::100",
+		_("Bal Qty") + "::50"
 
 
 	]
@@ -148,7 +175,7 @@ def get_stock_ledger_entries(filters, items):
 			posting_date between %(from_date)s and %(to_date)s
 			{sle_conditions}
 			{item_conditions_sql}
-			order by sle.item_code asc, posting_date asc, posting_time asc"""\
+			order by sle.item_code asc, sle.actual_qty desc"""\
 		.format(
 			sle_conditions=get_sle_conditions(filters),
 			item_conditions_sql = item_conditions_sql
