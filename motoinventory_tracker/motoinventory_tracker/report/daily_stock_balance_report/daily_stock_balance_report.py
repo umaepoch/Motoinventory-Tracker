@@ -54,7 +54,7 @@ def execute(filters=None):
 
 	total_count = 0
 	item_count = 1
-	in_item_count = 0
+	in_item_count = 1
 	out_item_count = 0
 	whse_count = 0
 	in_whse_count = 0
@@ -129,7 +129,7 @@ def execute(filters=None):
 
  
 				item_count = 1
-				in_item_count = 0
+				in_item_count = 1
 				out_item_count = 0
 				item_prev = item_work
 			
