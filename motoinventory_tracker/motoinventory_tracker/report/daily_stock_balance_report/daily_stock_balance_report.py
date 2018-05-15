@@ -90,10 +90,10 @@ def execute(filters=None):
 
 			if qty_prev > 0:
 				in_item_count = in_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], "", ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", qty_prev, "", ""])
 			else:
 				out_item_count = out_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", rows[7], ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", qty_prev, ""])
 			
 		else:
 			item_work = rows[0]
@@ -107,12 +107,12 @@ def execute(filters=None):
 
 			if item_prev == item_work:
 				item_count = item_count + 1
-				if qty_prev > 0:
+				if qty_work > 0:
 					in_item_count = in_item_count + 1
-					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], "", ""])
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", qty_work, "", ""])
 				else:
 					out_item_count = out_item_count + 1
-					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", rows[7], ""])
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", qty_work, ""])
 
 
 			else:
