@@ -228,7 +228,7 @@ def get_opening_balance(item, filters):
 	from erpnext.stock.stock_ledger import get_previous_sle
 	last_entry = get_previous_sle({
 		"item_code": item,
-		"warehouse_condition": filters.get("warehouse"),
+		"warehouse": filters.get("warehouse"),
 		"posting_date": filters.get("from_date"),
 		"posting_time": "00:00:00"
 	})
