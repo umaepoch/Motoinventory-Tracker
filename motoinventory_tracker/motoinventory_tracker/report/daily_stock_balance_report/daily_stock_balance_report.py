@@ -3,12 +3,29 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe import _, msgprint, throw
+import json
+import time
+import math
+import ast
+import os.path
+import sys
+print sys.path
+
+from frappe import _, msgprint, throw, utils
+from datetime import datetime, timedelta
+from frappe.utils import flt, getdate, datetime,comma_and
+from collections import defaultdict
+from werkzeug.wrappers import Response
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 
 def execute(filters=None):
 	columns = get_columns()
 	items = get_items(filters)
 	sl_entries = get_stock_ledger_entries(filters, items)
+
 	item_details = get_item_details(items, sl_entries)
 
 	data = []
@@ -171,11 +188,18 @@ def get_stock_ledger_entries(filters, items):
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items]))
 
+#	return frappe.db.sql("""select sle.posting_date,
+#			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
+#			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
+#		from `tabStock Ledger Entry` sle, `tabSerial No` sn
+#		where sle.serial_no = sn.name %s order by sle.item_code asc, sle.actual_qty desc""" % conditions, as_dict=1)
+
 	return frappe.db.sql("""select sle.posting_date,
 			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
 			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
-		from `tabStock Ledger Entry` sle, `tabSerial No` sn
-		where sle.serial_no = sn.name %s order by sle.item_code asc, sle.actual_qty desc""" % conditions, as_dict=1)
+		from `tabStock Ledger Entry` sle, `tabSerial No` sn where sle.serial_no = sn.name and posting_date >= %s and posting_date <= %s and sn.warehouse = %s order by item_code asc, sle.actual_qty desc""", (filters.get("from_date"), filters.get("to_date"), filters.get("warehouse")), as_dict=1)
+
+
 
 def get_items(filters):
 	conditions = []
@@ -211,14 +235,24 @@ def get_item_details(items, sl_entries):
 	return item_details
 
 def get_sle_conditions(filters):
+#	conditions = ""
+#	conditions = "sle.posting_date >= CURDATE() - 30"
 
-	conditions = ""
-	conditions += " and sle.posting_date >= CURDATE() - 1"
+#	if filters.get("warehouse"):
+#		conditions += " and sle.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
 
+#	return conditions
+
+	conditions = []
+#	if filters.get("from_date"):
+#		frappe.msgprint(_(filters.get("from_date")))
+#		conditions.append("posting_date between %(from_date)s and %(to_date)s")
 	if filters.get("warehouse"):
-		conditions = " and sle.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
+		warehouse_condition = get_warehouse_condition(filters.get("warehouse"))
+		if warehouse_condition:
+			conditions.append(warehouse_condition)
 
-	return conditions
+	return "and {}".format(" and ".join(conditions)) if conditions else ""
 
 
 
