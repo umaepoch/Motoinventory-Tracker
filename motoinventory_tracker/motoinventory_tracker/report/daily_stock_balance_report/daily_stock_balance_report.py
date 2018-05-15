@@ -71,7 +71,7 @@ def execute(filters=None):
 			whse_count = whse_count + 1
 			if qty_prev > 0:
 				in_item_count = in_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7]], "", "")
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], "", ""])
 			else:
 				out_item_count = out_item_count + 1
 				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], ""])
