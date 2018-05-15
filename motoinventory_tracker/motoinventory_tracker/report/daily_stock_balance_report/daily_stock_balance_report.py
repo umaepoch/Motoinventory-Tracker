@@ -171,7 +171,7 @@ def get_stock_ledger_entries(filters, items):
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items]))
 
-	return frappe.db.sql("""select concat_ws(" ", posting_date, posting_time) as date,
+	return frappe.db.sql("""select sle.posting_date,
 			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
 			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
 		from `tabStock Ledger Entry` sle, `tabSerial No` sn
@@ -213,12 +213,7 @@ def get_item_details(items, sl_entries):
 def get_sle_conditions(filters):
 
 	conditions = ""
-        if filters.get("from_date"):
-		conditions += " and sle.posting_date >= '%s'" % frappe.db.escape(filters["from_date"])
-
-        if filters.get("to_date"):
-		conditions += " and sle.posting_date <= '%s'" % frappe.db.escape(filters["to_date"])
-
+	conditions += " and sle.posting_date >= CURDATE() - 1"
 
 	if filters.get("warehouse"):
 		conditions = " and sle.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
