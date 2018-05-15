@@ -102,10 +102,10 @@ def execute(filters=None):
 				else:
 					if qty_prev > 0:
 						in_item_count = in_item_count + 1
-						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, rows[7], "", ""])
+						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, qty_prev, "", ""])
 					else:
 						out_item_count = out_item_count + 1
-						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, "", rows[7], ""])
+						summ_data.append([whse_prev, item_prev, vtype_prev, vouch_prev, serial_prev, vehstatus_prev, brn_prev, "", qty_prev, ""])
 					summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
@@ -113,13 +113,13 @@ def execute(filters=None):
 				in_item_count = 0
 				out_item_count = 0
 				item_prev = item_work
-				serial_prev = serial_work
-				whse_prev = whse_work
-				vehstatus_prev = vehstatus_work
-				brn_prev = brn_work
-				vtype_prev = vtype_work
-				vouch_prev = vouch_work
-				qty_prev = qty_work
+			
+			serial_prev = serial_work	
+			vehstatus_prev = vehstatus_work
+			brn_prev = brn_work
+			vtype_prev = vtype_work
+			vouch_prev = vouch_work
+			qty_prev = qty_work
 			if rows[6]:
 				alloc_whse_count = alloc_whse_count + 1
 			else:
