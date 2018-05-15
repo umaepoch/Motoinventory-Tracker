@@ -54,7 +54,7 @@ def execute(filters=None):
 	for rows in data:
 		if total_count == 0:
 			opening_qty = get_opening_balance(rows[0], filters)
-			summ_data.append([whse_prev, item_prev, "", "", "", "", "", opening_qty, "", "", ""])
+			summ_data.append([rows[1], rows[0], "", "", "", "", "", opening_qty, "", "", ""])
 			item_prev = rows[0]
 			whse_prev = rows[1]
 			vtype_prev = rows[2]
@@ -213,8 +213,12 @@ def get_item_details(items, sl_entries):
 def get_sle_conditions(filters):
 
 	conditions = ""
+        if filters.get("from_date"):
+		conditions += " and sle.posting_date >= '%s'" % frappe.db.escape(filters["from_date"])
 
-	conditions = "and sle.posting_date >= CURDATE() - 1"
+        if filters.get("to_date"):
+		conditions += " and sle.posting_date <= '%s'" % frappe.db.escape(filters["to_date"])
+
 
 	if filters.get("warehouse"):
 		conditions = " and sle.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
