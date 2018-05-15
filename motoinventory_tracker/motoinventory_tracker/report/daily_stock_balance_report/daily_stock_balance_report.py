@@ -117,7 +117,7 @@ def execute(filters=None):
 
 			else:
 				if item_count == 1:
-					if qty_work > 0:
+					if qty_prev > 0:
 						in_item_count = in_item_count + 1
 					else:
 						out_item_count = out_item_count + 1
@@ -134,7 +134,7 @@ def execute(filters=None):
 #					summ_data.append(["", item_pr, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
-				item_count = 1
+				item_count = 0
 				in_item_count = 0
 				out_item_count = 0
 				item_prev = item_work
