@@ -10,7 +10,6 @@ def execute(filters=None):
 	items = get_items(filters)
 	sl_entries = get_stock_ledger_entries(filters, items)
 	item_details = get_item_details(items, sl_entries)
-	opening_row = get_opening_balance(filters, columns)
 
 	data = []
 	summ_data = []
@@ -45,6 +44,7 @@ def execute(filters=None):
 	out_whse_count = 0
 
 #	if opening_row:
+#		frappe.msgprint(_(opening_row))
 #		data.append(opening_row)
 
 	for sle in sl_entries:
@@ -53,7 +53,8 @@ def execute(filters=None):
 
 	for rows in data:
 		if total_count == 0:
-
+			opening_qty = get_opening_balance(rows[0], filters)
+			summ_data.append([whse_prev, item_prev, "", "", "", "", "", opening_qty, "", "", ""])
 			item_prev = rows[0]
 			whse_prev = rows[1]
 			vtype_prev = rows[2]
@@ -69,12 +70,13 @@ def execute(filters=None):
 				unalloc_whse_count = unalloc_whse_count + 1
 
 			whse_count = whse_count + 1
+
 			if qty_prev > 0:
 				in_item_count = in_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], "", ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], "", ""])
 			else:
 				out_item_count = out_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", rows[7], ""])
 			
 		else:
 			item_work = rows[0]
@@ -90,22 +92,22 @@ def execute(filters=None):
 				item_count = item_count + 1
 				if qty_work > 0:
 					in_item_count = in_item_count + 1
-					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], rows[7], "", ""])
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], "", ""])
 				else:
 					out_item_count = out_item_count + 1
-					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", rows[7], ""])
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", rows[7], ""])
 
 
 			else:
-#				if total_count == 1:
-				summ_data.append(["", item_prev, "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
-#				else:
-				if qty_prev > 0:
+				summ_data.append(["", item_prev, "", "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
+				opening_qty = get_opening_balance(item_work, filters)
+				summ_data.append([whse_prev, item_work, "", "", "", "", "", opening_qty, "", "", ""])
+				if qty_work > 0:
 					in_item_count = in_item_count + 1
-					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, qty_work, "", ""])
+					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, "", ""])
 				else:
 					out_item_count = out_item_count + 1
-					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
+					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", "", qty_work, ""])
 #					summ_data.append(["", item_pr, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
@@ -129,29 +131,30 @@ def execute(filters=None):
 			
 		total_count = total_count +1
 
-	if qty_work > 0:
-		in_item_count = in_item_count + 1
-		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, qty_work, "", ""])	
-	else:
-		out_item_count = out_item_count + 1
-		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
+#	if qty_work > 0:
+#		in_item_count = in_item_count + 1
+#		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, qty_work, "", ""])	
+#	else:
+#		out_item_count = out_item_count + 1
+#		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
 
-		summ_data.append(["", item_work, "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
+	summ_data.append(["", item_work, "", "", "", "", "", "", in_item_count, out_item_count, (in_item_count - out_item_count)])
 
-	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "Unallocated", "", unalloc_whse_count, whse_count])
+	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "", "Unallocated", "", unalloc_whse_count, whse_count])
 	
 	return columns, summ_data
 
 def get_columns():
 	columns = [
 
-		_("Item") + ":Link/Item:130",
 		_("Warehouse") + ":Link/Warehouse:100", 
+		_("Item") + ":Link/Item:130",
 		_("Voucher Type") + "::110",
 		_("Voucher #") + "::100",
 		_("Serial #") + ":Link/Serial No:100",
 		_("Vehicle Status") +"::100",
 		_("Booking Reference")+"::100",
+		_("Opening Qty") +"::100",
 		_("In Qty")+"::100",
 		_("Out Qty")+"::100",
 		_("Bal Qty") + "::50"
@@ -163,6 +166,7 @@ def get_columns():
 
 def get_stock_ledger_entries(filters, items):
 	item_conditions_sql = ''
+	conditions = get_sle_conditions(filters)
 	if items:
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items]))
@@ -171,15 +175,7 @@ def get_stock_ledger_entries(filters, items):
 			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
 			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
 		from `tabStock Ledger Entry` sle, `tabSerial No` sn
-		where sle.serial_no = sn.name and
-			posting_date between %(from_date)s and %(to_date)s
-			{sle_conditions}
-			{item_conditions_sql}
-			order by sle.item_code asc, sle.actual_qty desc"""\
-		.format(
-			sle_conditions=get_sle_conditions(filters),
-			item_conditions_sql = item_conditions_sql
-		), filters, as_dict=1)
+		where sle.serial_no = sn.name %s order by sle.item_code asc, sle.actual_qty desc""" % conditions, as_dict=1)
 
 def get_items(filters):
 	conditions = []
@@ -215,37 +211,35 @@ def get_item_details(items, sl_entries):
 	return item_details
 
 def get_sle_conditions(filters):
-	conditions = []
+
+	conditions = ""
+
+	conditions = "and sle.posting_date >= CURDATE() - 1"
+
 	if filters.get("warehouse"):
-		warehouse_condition = get_warehouse_condition(filters.get("warehouse"))
-		if warehouse_condition:
-			conditions.append(warehouse_condition)
-	if filters.get("voucher_no"):
-		conditions.append("voucher_no=%(voucher_no)s")
-	if filters.get("batch_no"):
-		conditions.append("batch_no=%(batch_no)s")
-	if filters.get("project"):
-		conditions.append("project=%(project)s")
+		conditions = " and sle.warehouse = '%s'" % frappe.db.escape(filters.get("warehouse"), percent=False)
 
-	return "and {}".format(" and ".join(conditions)) if conditions else ""
+	return conditions
 
-def get_opening_balance(filters, columns):
-	if not (filters.item_code and filters.warehouse and filters.from_date):
-		return
 
+
+def get_opening_balance(item, filters):
+	
 	from erpnext.stock.stock_ledger import get_previous_sle
 	last_entry = get_previous_sle({
-		"item_code": filters.item_code,
-		"warehouse_condition": get_warehouse_condition(filters.warehouse),
-		"posting_date": filters.from_date,
+		"item_code": item,
+		"warehouse_condition": get_warehouse_condition(filters.get("warehouse")),
+		"posting_date": filters.get("from_date"),
 		"posting_time": "00:00:00"
 	})
-	row = [""]*len(columns)
-	row[1] = _("'Opening'")
-	for i, v in ((9, 'qty_after_transaction'), (11, 'valuation_rate'), (12, 'stock_value')):
-			row[i] = last_entry.get(v, 0)
 
-	return row
+	return last_entry.get('qty_after_transaction')
+#	row = [""]*len(columns)
+#	row[1] = _("'Opening'")
+#	for i, v in ((9, 'qty_after_transaction'), (11, 'valuation_rate'), (12, 'stock_value')):
+#			row[i] = last_entry.get(v, 0)
+
+#	return row
 
 def get_warehouse_condition(warehouse):
 	warehouse_details = frappe.db.get_value("Warehouse", warehouse, ["lft", "rgt"], as_dict=1)
