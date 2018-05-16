@@ -59,7 +59,7 @@ def execute(filters=None):
 	whse_count = 0
 	in_whse_count = 0
 	out_whse_count = 0
-
+	alloc_unalloc = ""
 	opening_qty = 0
 
 #	if opening_row:
@@ -89,13 +89,18 @@ def execute(filters=None):
 				unalloc_whse_count = unalloc_whse_count + 1
 
 			whse_count = whse_count + 1
+		
+			if rows[6] and rows[5] == "Allocated but not Delivered":
+				alloc_unalloc = "Allocated"
+			else:
+				alloc_unalloc = "Unallocated"
 
 			if qty_prev > 0:
 				in_item_count = in_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", qty_prev, "", ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", qty_prev, "", ""])
 			else:
 				out_item_count = out_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", qty_prev, ""])
+				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", "", qty_prev, ""])
 			
 		else:
 			item_work = rows[0]
@@ -108,13 +113,18 @@ def execute(filters=None):
 			qty_work = rows[7]
 
 			if item_prev == item_work:
+				if rows[6] and rows[5] == "Allocated but not Delivered":
+					alloc_unalloc = "Allocated"
+				else:
+					alloc_unalloc = "Unallocated"
+
 				item_count = item_count + 1
 				if qty_work > 0:
 					in_item_count = in_item_count + 1
-					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", qty_work, "", ""])
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", qty_work, "", ""])
 				else:
 					out_item_count = out_item_count + 1
-					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], rows[6], "", "", qty_work, ""])
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", "", qty_work, ""])
 
 
 			else:
@@ -132,12 +142,17 @@ def execute(filters=None):
 				out_item_count = 0
 				item_prev = item_work
 
+				if brn_work and vehstatus_work == "Allocated but not Delivered":
+					alloc_unalloc = "Allocated"
+				else:
+					alloc_unalloc = "Unallocated"
+
 				if qty_work > 0:
 					in_item_count = in_item_count + 1
-					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, "", ""])
+					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, alloc_unalloc, "", qty_work, "", ""])
 				else:
 					out_item_count = out_item_count + 1
-					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", "", qty_work, ""])
+					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, alloc_unalloc, "", "", qty_work, ""])
 #					summ_data.append(["", item_pr, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
@@ -165,8 +180,9 @@ def execute(filters=None):
 #		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
 
 	summ_data.append(["", item_work, "", "", "", "", "", "", in_item_count, out_item_count, (opening_qty + in_item_count - out_item_count)])
-
-	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "", "Unallocated", "", unalloc_whse_count, whse_count])
+	summ_data.append(["", "", "", "", "", "", "", "", "", "", ""])
+	summ_data.append(["", "", "", "", "", "", "", "", "", "", ""])
+	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "Unallocated", unalloc_whse_count, "", "", whse_count])
 	
 	return columns, summ_data
 
@@ -179,11 +195,11 @@ def get_columns():
 		_("Voucher #") + "::100",
 		_("Serial #") + ":Link/Serial No:100",
 		_("Vehicle Status") +"::100",
-		_("Booking Reference")+"::100",
-		_("Opening Qty") +"::100",
-		_("In Qty")+"::100",
-		_("Out Qty")+"::100",
-		_("Bal Qty") + "::50"
+		_("Allocated ?")+"::100",
+		_("Opening Qty") +":Int:100",
+		_("In Qty")+":Int:100",
+		_("Out Qty")+":Int:100",
+		_("Bal Qty") + ":Int:50"
 
 
 	]
