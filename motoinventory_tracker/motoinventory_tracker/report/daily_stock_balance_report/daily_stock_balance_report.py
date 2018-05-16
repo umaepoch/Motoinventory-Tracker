@@ -167,7 +167,7 @@ def execute(filters=None):
 #	else:
 #		out_item_count = out_item_count + 1
 #		summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, ""])
-
+	frappe.throw(_("End"))
 	summ_data.append(["", item_work, "", "", "", "", "", "", in_item_count, out_item_count, (opening_qty + in_item_count - out_item_count)])
 
 	summ_data.append([whse_work, "Allocated", alloc_whse_count, "", "", "", "", "Unallocated", "", unalloc_whse_count, whse_count])
