@@ -60,6 +60,8 @@ def execute(filters=None):
 	in_whse_count = 0
 	out_whse_count = 0
 
+	opening_qty = 0
+
 #	if opening_row:
 #		frappe.msgprint(_(opening_row))
 #		data.append(opening_row)
@@ -116,6 +118,11 @@ def execute(filters=None):
 
 
 			else:
+				frappe.msgprint(_(item_prev))
+				frappe.msgprint(_(item_work))
+				frappe.msgprint(_(item_count))
+				frappe.msgprint(_(serial_work))
+				frappe.msgprint(_(qty_prev))
 				if item_count == 1:
 					if qty_prev > 0:
 						in_item_count = in_item_count + 1
