@@ -118,20 +118,20 @@ def execute(filters=None):
 
 
 			else:
-				frappe.msgprint(_(item_prev))
-				frappe.msgprint(_(item_work))
-				frappe.msgprint(_(item_count))
-				frappe.msgprint(_(serial_work))
-				frappe.msgprint(_(qty_prev))
-				if item_count == 1:
-					if qty_prev > 0:
-						in_item_count = in_item_count + 1
-					else:
-						out_item_count = out_item_count + 1
+				if qty_prev > 0:
+					in_item_count = in_item_count + 1
+				else:
+					out_item_count = out_item_count + 1
 
 				summ_data.append(["", item_prev, "", "", "", "", "", "", in_item_count, out_item_count, (opening_qty + in_item_count - out_item_count)])
 				opening_qty = get_opening_balance(item_work, filters)
 				summ_data.append([whse_prev, item_work, "", "", "", "", "", opening_qty, "", "", ""])
+
+				item_count = 0
+				in_item_count = 0
+				out_item_count = 0
+				item_prev = item_work
+
 				if qty_work > 0:
 					in_item_count = in_item_count + 1
 					summ_data.append([whse_work, item_work, vtype_work, vouch_work, serial_work, vehstatus_work, brn_work, "", qty_work, "", ""])
@@ -141,11 +141,7 @@ def execute(filters=None):
 #					summ_data.append(["", item_pr, "", "", "", "", "", in_item_count, out_item_count, item_count])
 
  
-				item_count = 0
-				in_item_count = 0
-				out_item_count = 0
-				item_prev = item_work
-			
+							
 			serial_prev = serial_work	
 			vehstatus_prev = vehstatus_work
 			brn_prev = brn_work
