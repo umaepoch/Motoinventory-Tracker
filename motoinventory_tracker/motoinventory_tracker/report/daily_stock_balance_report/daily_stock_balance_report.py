@@ -222,7 +222,7 @@ def get_stock_ledger_entries(filters, items):
 	return frappe.db.sql("""select sle.posting_date,
 			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
 			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
-		from `tabStock Ledger Entry` sle, `tabSerial No` sn where sle.serial_no = sn.name and posting_date <= %s and sle.warehouse = %s order by item_code asc, sle.actual_qty desc""", (filters.get("from_date"), filters.get("to_date"), filters.get("warehouse")), as_dict=1)
+		from `tabStock Ledger Entry` sle, `tabSerial No` sn where sle.serial_no = sn.name and posting_date <= %s and sle.warehouse = %s order by item_code asc, sle.actual_qty desc""", (filters.get("to_date"), filters.get("warehouse")), as_dict=1)
 
 
 
