@@ -61,6 +61,13 @@ def execute(filters=None):
 	out_whse_count = 0
 	alloc_unalloc = ""
 	opening_qty = 0
+	qty_diff = 0
+	open_qty = 0
+	in_qty = 0
+	out_qty = 0
+
+	from_date = getdate(filters.get("from_date"))
+	to_date = getdate(filters.get("to_date"))
 
 #	if opening_row:
 #		frappe.msgprint(_(opening_row))
@@ -68,11 +75,13 @@ def execute(filters=None):
 
 	for sle in sl_entries:
 		item_detail = item_details[sle.item_code]
-		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
+		data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction, sle.posting_date])
 
 	for rows in data:
+
+
 		if total_count == 0:
-			opening_qty = get_opening_balance(rows[0], filters)
+#			opening_qty = get_opening_balance(rows[0], filters)
 			summ_data.append([rows[1], rows[0], "", "", "", "", "", opening_qty, "", "", ""])
 			item_prev = rows[0]
 			whse_prev = rows[1]
@@ -95,12 +104,21 @@ def execute(filters=None):
 			else:
 				alloc_unalloc = "Unallocated"
 
-			if qty_prev > 0:
-				in_item_count = in_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", qty_prev, "", ""])
-			else:
-				out_item_count = out_item_count + 1
-				summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", "", qty_prev, ""])
+			if rows[9] < from_date:
+				open_qty += qty_prev
+
+			elif rows[9] >= from_date and rows[9] <= to_date:
+				if qty_prev > 0:
+					in_qty += qty_prev
+					in_item_count = in_item_count + 1
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", qty_prev, "", ""])
+
+				else:
+					out_qty += qty_prev
+					out_item_count = out_item_count + 1
+					summ_data.append([whse_prev, item_prev, rows[2], rows[3], rows[4], rows[5], alloc_unalloc, "", "", qty_prev, ""])
+
+			
 			
 		else:
 			item_work = rows[0]
@@ -222,7 +240,7 @@ def get_stock_ledger_entries(filters, items):
 	return frappe.db.sql("""select sle.posting_date,
 			sle.item_code, sle.warehouse, sle.actual_qty, qty_after_transaction, incoming_rate, valuation_rate,
 			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
-		from `tabStock Ledger Entry` sle, `tabSerial No` sn where sle.serial_no = sn.name and posting_date >= %s and posting_date <= %s and sle.warehouse = %s order by item_code asc, sle.actual_qty desc""", (filters.get("from_date"), filters.get("to_date"), filters.get("warehouse")), as_dict=1)
+		from `tabStock Ledger Entry` sle, `tabSerial No` sn where sle.serial_no = sn.name and posting_date <= %s and sle.warehouse = %s order by item_code asc, sle.actual_qty desc""", (filters.get("from_date"), filters.get("to_date"), filters.get("warehouse")), as_dict=1)
 
 
 

@@ -108,7 +108,7 @@ def execute(filters=None):
 				unalloc_whse_count = 1
 				
 		total_count = total_count +1
-	if whse_count == 1:
+	if item_count == 1:
 		data.append([whse_work, item_work, serial_work, vehstatus_work, brn_work, ""])	
 		data.append(["", item_work, "", "", "", item_count])
 		tot_alloc_whse_count = tot_alloc_whse_count + alloc_whse_count
