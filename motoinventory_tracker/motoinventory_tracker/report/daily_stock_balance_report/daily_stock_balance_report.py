@@ -45,6 +45,8 @@ def execute(filters=None):
 	outward_list = []
 	inward_list = []
 	items_in_stock_list = []
+	in_serialid_list = []
+	out_serialid_list = []
 	for rows in data:
 		print "serialID-------", rows[4]
 		print "item-------", rows[0]
@@ -85,12 +87,17 @@ def execute(filters=None):
 							whse_data = "Received From RE/Dealer"
 					items_data = {"whse":whse_prev,"item":item_code,"serial_id":serial_id,"dest_whse":whse_data}
 					inward_list.append(items_data)
+			else:
+				print "Missing------------", voucher_type, voucher_no
 			
 		else:
 			print "sid------", rows[4]
 			print "voucher_type------", rows[2]
 			items_data = {}
 			whse_data = ""
+			customer_name = ""
+			item_code = ""
+			serial_id = ""
 			if voucher_type == "Stock Entry":
 				whse = get_destination_warehouse(voucher_no)
 				for details in whse:
@@ -104,10 +111,8 @@ def execute(filters=None):
 					items_data = {"whse":whse_prev,"item":details['item_code'],
 							"serial_id":details['serial_no'],"dest_whse":whse_data}
 					outward_list.append(items_data)
+
 			elif voucher_type == "Delivery Note":
-				customer_name = ""
-				item_code = ""
-				serial_id = ""
 				print "Delivery Note------", voucher_no
 				delivery_details = get_delivery_details(voucher_no)
 				print "delivery_details------", delivery_details
@@ -120,6 +125,23 @@ def execute(filters=None):
 						whse_data = whse_data + str(customer_name)
 					items_data = {"whse":whse_prev,"item":item_code,"serial_id":serial_id,"dest_whse":whse_data}
 					outward_list.append(items_data)
+
+			elif voucher_type == "Sales Invoice":
+				print "voucher_no------", voucher_no
+				sales_invoice_details = get_sales_invoice_details(voucher_no)
+				print "sales_invoice_details------", sales_invoice_details
+				for data in sales_invoice_details:
+					customer_name = data['customer']
+					item_code = data['item_code']
+					serial_id = data['serial_no']
+					if customer_name is not None and customer_name is not "":
+						whse_data = "Delivered To "
+						whse_data = whse_data + str(customer_name)
+					items_data = {"whse":whse_prev,"item":item_code,"serial_id":serial_id,"dest_whse":whse_data}
+					outward_list.append(items_data)
+			else:
+				print "Missing------------", voucher_type, voucher_no
+
 	allocation_count = 0
 	unallocation_count = 0
 	stock_ids_list = []
@@ -168,6 +190,9 @@ def execute(filters=None):
 		unallocation_count = 0
 	return columns, summ_data
 
+def get_sales_invoice_details(voucher_no):
+	details = frappe.db.sql(""" select sii.serial_no,sii.item_code,si.customer from `tabSales Invoice` si, `tabSales Invoice Item` sii 					where sii.serial_no= %s and si.name=sii.parent """, voucher_no, as_dict=1)
+	return details
 
 def get_delivery_details(voucher_no):
 	details = frappe.db.sql(""" select dni.serial_no,dni.item_code,dn.customer from `tabDelivery Note Item` dni,`tabDelivery Note` dn 
