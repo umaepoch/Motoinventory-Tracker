@@ -191,7 +191,7 @@ def execute(filters=None):
 	return columns, summ_data
 
 def get_sales_invoice_details(voucher_no):
-	details = frappe.db.sql(""" select sii.serial_no,sii.item_code,si.customer from `tabSales Invoice` si, `tabSales Invoice Item` sii 					where sii.serial_no= %s and si.name=sii.parent """, voucher_no, as_dict=1)
+	details = frappe.db.sql(""" select sii.serial_no,sii.item_code,si.customer from `tabSales Invoice` si, `tabSales Invoice Item` sii 					where sii.parent= %s and si.name=sii.parent """, voucher_no, as_dict=1)
 	return details
 
 def get_delivery_details(voucher_no):
