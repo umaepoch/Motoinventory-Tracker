@@ -43,6 +43,7 @@ def execute(filters=None):
 			data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, 			sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	details = get_opening_qty(filters, items)
+	serial_id_count = 0
 	for opening_data in details:
 		if opening_data.voucher_type == "Stock Reconciliation":
 			qty_diff = flt(opening_data.qty_after_transaction) - opening_data.bal_qty
@@ -51,8 +52,11 @@ def execute(filters=None):
 
 		if opening_data.posting_date < from_date:
 			opening_qty += qty_diff
+		bal_qty += qty_diff
 
+	print "serial_id_count-------", serial_id_count
 	print "opening_qty-------", opening_qty
+	print "bal_qty-------", bal_qty
 
 	outward_list = []
 	inward_list = []
@@ -60,6 +64,7 @@ def execute(filters=None):
 	in_serialid_list = []
 	out_serialid_list = []
 	for rows in data:
+		#print "actual_qty-------", rows[7]
 		actual_qty = rows[7]
 		serial_no = rows[4]
 		item_prev = rows[0]
@@ -159,11 +164,14 @@ def execute(filters=None):
 	for data in stock_details:
 		inward_outward_status = ""
 		if data['serial_no'] is not None:
-			booking_reference_number = data['booking_reference_number']
-			item_code = data['item_code']
+			serial_no = str(data['serial_no'])
+			customer_details = get_customer(serial_no)
+			booking_reference_number = customer_details[0]['booking_reference_number']
+			item_code = customer_details[0]['item_code']
+			delivery_date = customer_details[0]['delivery_date']
 			print "booking_reference_number------------", booking_reference_number
 			if booking_reference_number is not None and booking_reference_number is not "":
-				inward_outward_status = str(data['vehicle_status'])
+				inward_outward_status = "Allocated" + " (" + booking_reference_number + ")"
 				allocation_count = allocation_count + 1
 			else:
 				inward_outward_status = "Free Stock"
@@ -209,16 +217,32 @@ def get_delivery_details(voucher_no):
 def get_destination_warehouse(voucher_no):
 	whse = frappe.db.sql(""" select sed.item_code,sed.t_warehouse,se.purpose,sed.s_warehouse,sed.serial_no from `tabStock Entry Detail` 					sed, `tabStock Entry` se where sed.parent = %s and sed.parent = se.name""", voucher_no, as_dict=1)
 	return whse
+'''
+def get_items_in_stock(filters):
+	item_code = filters.get("item_code")
+	to_date = filters.get("to_date")
+	if filters.get("warehouse") and filters.get("item_code"):
+		stock_list = frappe.db.sql(""" select booking_reference_number,vehicle_status,item_code,serial_no,delivery_date from
+		`tabSerial No` where warehouse=%s and item_code=%s and delivery_document_no is null or delivery_date > '""" + to_date + """' 			""", (warehouse, item_code), as_dict=1)
+	else:
+		stock_list = frappe.db.sql(""" select booking_reference_number,vehicle_status,item_code,serial_no,delivery_date from 
+		`tabSerial No` where warehouse=%s and delivery_document_no is null or delivery_date > '""" + to_date + """' """, warehouse, 			as_dict=1)
+		
+	return stock_list
+'''
 
 def get_items_in_stock(filters):
 	item_code = filters.get("item_code")
+	to_date = filters.get("to_date")
 	if filters.get("warehouse") and filters.get("item_code"):
-		stock_list = frappe.db.sql(""" select booking_reference_number,vehicle_status,item_code,serial_no from
-		`tabSerial No` where warehouse=%s and item_code=%s and delivery_document_no is null""", (warehouse, item_code), as_dict=1)
+		item_code = filters.get("item_code")
+		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     item_code ='"""+item_code+"""' and modified <= '"""+to_date+"""') and serial_no in(select serial_no from 				     `tabSerial No` where item_code ='"""+item_code+"""' and delivery_document_no is null or
+			     delivery_date > '"""+to_date+"""') and 
+			     item_code=%s""", item_code, as_dict=1)
 	else:
-		stock_list = frappe.db.sql(""" select booking_reference_number,vehicle_status,item_code,serial_no from 
-		`tabSerial No` where warehouse=%s and delivery_document_no is null""", warehouse, as_dict=1)
-		
+		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= '"""+to_date+"""') and serial_no in(select serial_no from `tabSerial No` where 
+			     delivery_document_no is null or delivery_date > '"""+to_date+"""')""", as_dict=1)
+		print "---------------stock_list:", stock_list
 	return stock_list
  
 def get_columns():
@@ -234,6 +258,10 @@ def get_columns():
 	]
 
 	return columns
+
+def get_customer(serial_no):
+	details = frappe.db.sql(""" select customer_name,booking_reference_number,vehicle_status,item_code,delivery_date from `tabSerial No` 					where serial_no = %s""", serial_no, as_dict=1)
+	return details
 
 def get_opening_balance(filters):
 	from erpnext.stock.stock_ledger import get_previous_sle
@@ -285,7 +313,7 @@ def get_opening_qty(filters, items):
 
 	return frappe.db.sql("""
 		select
-			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate,
+			sle.item_code, warehouse, sle.posting_date, sle.actual_qty, sle.valuation_rate, sle.serial_no,
 			sle.company, sle.voucher_type, sle.qty_after_transaction, sle.stock_value_difference
 		from
 			`tabStock Ledger Entry` sle force index (posting_sort_index)
