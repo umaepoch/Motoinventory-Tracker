@@ -42,7 +42,7 @@ def execute(filters=None):
 		else:
 			data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, 			sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
-	details = get_opening_qty(filters, items)
+	details = get_opening_balance(filters, items)
 	serial_id_count = 0
 	for opening_data in details:
 		if opening_data.voucher_type == "Stock Reconciliation":
@@ -235,10 +235,8 @@ def get_items_in_stock(filters):
 	item_code = filters.get("item_code")
 	to_date = filters.get("to_date")
 	if filters.get("warehouse") and filters.get("item_code"):
-		item_code = filters.get("item_code")
 		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     item_code ='"""+item_code+"""' and modified <= '"""+to_date+"""') and serial_no in(select serial_no from 				     `tabSerial No` where item_code ='"""+item_code+"""' and delivery_document_no is null or
-			     delivery_date > '"""+to_date+"""') and 
-			     item_code=%s""", item_code, as_dict=1)
+			     delivery_date > '"""+to_date+"""') and item_code=%s""", item_code, as_dict=1)
 	else:
 		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= '"""+to_date+"""') and serial_no in(select serial_no from `tabSerial No` where 
 			     delivery_document_no is null or delivery_date > '"""+to_date+"""')""", as_dict=1)
@@ -263,16 +261,6 @@ def get_customer(serial_no):
 	details = frappe.db.sql(""" select customer_name,booking_reference_number,vehicle_status,item_code,delivery_date from `tabSerial No` 					where serial_no = %s""", serial_no, as_dict=1)
 	return details
 
-def get_opening_balance(filters):
-	from erpnext.stock.stock_ledger import get_previous_sle
-	last_entry = get_previous_sle({
-		"item_code": filters.get("item_code"),
-		"warehouse": filters.get("warehouse"),
-		"posting_date": filters.get("from_date"),
-		"posting_time": "00:00:00"
-	})
-	#print "-------last_entry----------", last_entry.get('qty_after_transaction')
-	return last_entry.get('qty_after_transaction')
 
 def get_items(filters):
 	conditions = []
@@ -303,7 +291,7 @@ def get_stock_ledger_entries(filters, items):
 			stock_value, voucher_type, voucher_no, sle.serial_no, sn.vehicle_status, sn.booking_reference_number
 		from `tabStock Ledger Entry` sle, `tabSerial No` sn where sle.serial_no = sn.name and posting_date >= %s and posting_date <= %s and sle.warehouse = %s order by item_code asc, sle.actual_qty desc""", (from_date, to_date, filters.get("warehouse")), as_dict=1)
 
-def get_opening_qty(filters, items):
+def get_opening_balance(filters, items):
 	item_conditions_sql = ''
 	if items:
 		item_conditions_sql = ' and sle.item_code in ({})'\
