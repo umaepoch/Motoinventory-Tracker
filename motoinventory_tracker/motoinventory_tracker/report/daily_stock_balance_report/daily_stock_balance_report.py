@@ -74,24 +74,33 @@ def execute(filters=None):
 		inward_outward_status = ""
 		booking_reference_number = ""
 		customer_details = ""
+		old_date = ""
 
 		if actual_qty > 0:
 			items_data = {}
 			whse_data = ""
 			item_code = ""
 			serial_id = ""
+			vehicle_status = "inward"
 			if voucher_type == "Stock Entry":
 				whse = get_destination_warehouse(voucher_no)
 				for details in whse:
 					purpose = details['purpose']
 					item_code = details['item_code']
 					serial_id = details['serial_no']
+					old_date = str(details['modified'])
 					print "item_code------------", item_code
 					if purpose == "Material Transfer":
 						dest_whse = details['s_warehouse']
 						if dest_whse is not None:
+							s_warehouse = ""
 							whse_data = "Transfered From "
-							whse_data = whse_data + str(dest_whse)
+							if dest_whse == "Truck  - HSR":
+								s_warehouse = get_serial_no_details(serial_id,old_date,vehicle_status)
+								if s_warehouse:
+									whse_data = whse_data + str(s_warehouse)
+							else:
+								whse_data = whse_data + str(dest_whse)
 					elif purpose == "Material Receipt":
 						dest_whse = details['s_warehouse']
 						if dest_whse is not None:
@@ -112,16 +121,28 @@ def execute(filters=None):
 			customer_name = ""
 			item_code = ""
 			serial_id = ""
+			vehicle_status = "outward"
 			if voucher_type == "Stock Entry":
 				whse = get_destination_warehouse(voucher_no)
 				for details in whse:
 					purpose = details['purpose']
+					serial_id = details['serial_no']
+					old_date = str(details['modified'])
 					print "purpose------", purpose
 					if purpose == "Material Transfer" or purpose == "Material Receipt":
 						dest_whse = details['t_warehouse']
 						if dest_whse is not None:
+							t_warehouse = ""
 							whse_data = "Transfered To "
-							whse_data = whse_data + str(dest_whse)
+							if dest_whse == "Truck  - HSR":
+								t_warehouse = get_serial_no_details(serial_id,old_date,vehicle_status)
+								if t_warehouse:
+									whse_data = whse_data + str(t_warehouse)
+								else:
+									whse_data = "Transfered To Truck"
+							else:
+								whse_data = whse_data + str(dest_whse)
+
 					items_data = {"whse":whse_prev,"item":details['item_code'],
 							"serial_id":details['serial_no'],"dest_whse":whse_data}
 					outward_list.append(items_data)
@@ -205,6 +226,20 @@ def execute(filters=None):
 		unallocation_count = 0
 	return columns, summ_data
 
+def get_serial_no_details(serial_id,old_date,vehicle_status):
+	warehouse = ""
+	if vehicle_status == "outward":
+		details = frappe.db.sql(""" select t_warehouse from `tabStock Entry Detail` where serial_no = %s and 
+				s_warehouse = 'Truck  - HSR' and modified > '"""+old_date+"""' order by modified""", serial_id, as_dict=1)
+		if len(details)!=0:
+			warehouse = details[0]['t_warehouse']
+	else:
+		details = frappe.db.sql(""" select s_warehouse from `tabStock Entry Detail` where serial_no = %s and 
+				t_warehouse = 'Truck  - HSR' and modified < '"""+old_date+"""' order by modified desc""", serial_id, as_dict=1)
+		if len(details)!=0:
+			warehouse = details[0]['s_warehouse']
+	return warehouse
+
 def get_sales_invoice_details(voucher_no):
 	details = frappe.db.sql(""" select sii.serial_no,sii.item_code,si.customer from `tabSales Invoice` si, `tabSales Invoice Item` sii 					where sii.parent= %s and si.name=sii.parent """, voucher_no, as_dict=1)
 	return details
@@ -215,7 +250,8 @@ def get_delivery_details(voucher_no):
 	return details
 
 def get_destination_warehouse(voucher_no):
-	whse = frappe.db.sql(""" select sed.item_code,sed.t_warehouse,se.purpose,sed.s_warehouse,sed.serial_no from `tabStock Entry Detail` 					sed, `tabStock Entry` se where sed.parent = %s and sed.parent = se.name""", voucher_no, as_dict=1)
+	whse = frappe.db.sql(""" select sed.item_code,sed.t_warehouse,se.purpose,sed.s_warehouse,sed.serial_no,sed.modified from 
+		`tabStock Entry Detail` sed, `tabStock Entry` se where sed.parent = %s and sed.parent = se.name""", voucher_no, as_dict=1)
 	return whse
 '''
 def get_items_in_stock(filters):
