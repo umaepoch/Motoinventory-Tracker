@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["DSBR For Email"] = {
+frappe.query_reports["DSBR for Email"] = {
 	"filters": [
 		{
 			"fieldname":"warehouse",
