@@ -16,7 +16,6 @@ from werkzeug.wrappers import Response
 reload(sys)
 sys.setdefaultencoding('utf-8')
 def execute(filters=None):
-	frappe.msgprint(_("print"))
 	columns = get_columns()
 	items = ""
 	sl_entries = get_stock_ledger_entries(filters, items)
