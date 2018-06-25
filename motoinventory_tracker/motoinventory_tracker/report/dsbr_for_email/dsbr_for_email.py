@@ -17,7 +17,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 def execute(filters=None):
 	columns = get_columns()
-	items = ""
+	items = get_items(filters)
 	sl_entries = get_stock_ledger_entries(filters, items)
 	item_details = get_item_details(items, sl_entries)
 	global summ_data
@@ -41,8 +41,6 @@ def execute(filters=None):
 			qty_diff = flt(opening_data.qty_after_transaction) - opening_data.bal_qty
 		else:
 			qty_diff = flt(opening_data.actual_qty)
-		print "opening_data.posting_date----------", opening_data.posting_date
-		print "from_date----------", from_date
 		if opening_data.posting_date < from_date:
 			opening_qty += qty_diff
 		bal_qty += qty_diff
@@ -264,7 +262,7 @@ def get_customer(serial_no):
 	details = frappe.db.sql(""" select customer_name,booking_reference_number,vehicle_status,item_code,delivery_date from `tabSerial No` 					where serial_no = %s""", serial_no, as_dict=1)
 	return details
 
-'''
+
 def get_items(filters):
 	conditions = []
 	if filters.get("item_code"):
@@ -280,13 +278,12 @@ def get_items(filters):
 		items = frappe.db.sql_list("""select name from `tabItem` item where {}"""
 			.format(" and ".join(conditions)), filters)
 	return items
-'''
 
 def get_stock_ledger_entries(filters, items):
 	item_conditions_sql = ''
 	conditions = get_sle_conditions(filters)
-	from_date = datetime.datetime.now()
-	to_date = datetime.datetime.now()
+	from_date = datetime.date.today()
+	to_date = datetime.date.today()
 	if items:
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items]))
