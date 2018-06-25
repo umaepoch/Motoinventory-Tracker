@@ -239,6 +239,7 @@ def get_destination_warehouse(voucher_no):
 
 def get_items_in_stock(filters):
 	to_date = str(datetime.datetime.now())
+	to_date = to_date + " " + "23:59:59.999999"
 	stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= '"""+to_date+"""') and serial_no in(select serial_no from `tabSerial No` where 
 			     delivery_document_no is null or delivery_date > '"""+to_date+"""')""", as_dict=1)
 	print "---------------stock_list:", stock_list
