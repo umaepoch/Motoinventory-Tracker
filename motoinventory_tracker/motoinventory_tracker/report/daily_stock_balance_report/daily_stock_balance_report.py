@@ -260,11 +260,11 @@ def get_items_in_stock(filters):
 	to_date = str(filters.get("to_date"))
 	to_date = to_date + " " + "23:59:59.999999"
 	if filters.get("warehouse") and filters.get("item_code"):
-		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     item_code ='"""+item_code+"""' and modified <= date('"""+to_date+"""')) and serial_no in(select serial_no from 				     `tabSerial No` where item_code ='"""+item_code+"""' and delivery_document_no is null or
-			     delivery_date > date('"""+delivery_date+"""')) and item_code=%s""", item_code, as_dict=1)
+		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     item_code ='"""+item_code+"""' and modified <= '"""+to_date+"""') and serial_no in(select serial_no from 				     `tabSerial No` where item_code ='"""+item_code+"""' and delivery_document_no is null or
+			     delivery_date > '"""+delivery_date+"""') and item_code=%s""", item_code, as_dict=1)
 	else:
-		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= date('"""+to_date+"""')) and serial_no in(select serial_no from `tabSerial No` where 
-			     delivery_document_no is null or delivery_date > date('"""+delivery_date+"""'))""", as_dict=1)
+		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= '"""+to_date+"""') and serial_no in(select serial_no from `tabSerial No` where 
+			     delivery_document_no is null or delivery_date > '"""+delivery_date+"""')""", as_dict=1)
 		print "---------------stock_list:", stock_list
 	return stock_list
  
