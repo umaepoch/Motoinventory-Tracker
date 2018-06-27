@@ -16,7 +16,6 @@ from collections import defaultdict
 from werkzeug.wrappers import Response
 reload(sys)
 sys.setdefaultencoding('utf-8')
-
 def execute(filters=None):
 	columns = get_columns()
 	items = get_items(filters)
@@ -40,6 +39,7 @@ def execute(filters=None):
 			if str(sle.item_code) == str(item_code):
 				data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, 				sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 		else:
+			#print "posting_date----------", sle.posting_date
 			data.append([sle.item_code, sle.warehouse, sle.voucher_type, sle.voucher_no, sle.serial_no, sle.vehicle_status, 			sle.booking_reference_number, sle.actual_qty, sle.qty_after_transaction])
 
 	details = get_opening_balance(filters, items)
@@ -57,14 +57,14 @@ def execute(filters=None):
 	print "serial_id_count-------", serial_id_count
 	print "opening_qty-------", opening_qty
 	print "bal_qty-------", bal_qty
-
 	outward_list = []
 	inward_list = []
 	items_in_stock_list = []
 	in_serialid_list = []
 	out_serialid_list = []
+	total_vehicles_inward = 0
+	total_vehicles_outward = 0
 	for rows in data:
-		#print "actual_qty-------", rows[7]
 		actual_qty = rows[7]
 		serial_no = rows[4]
 		item_prev = rows[0]
@@ -75,7 +75,6 @@ def execute(filters=None):
 		booking_reference_number = ""
 		customer_details = ""
 		old_date = ""
-
 		if actual_qty > 0:
 			items_data = {}
 			whse_data = ""
@@ -94,9 +93,10 @@ def execute(filters=None):
 						dest_whse = details['s_warehouse']
 						if dest_whse is not None:
 							s_warehouse = ""
-							whse_data = "Transfered From "
+							whse_data = "Transferred From "
 							if dest_whse == "Truck  - HSR":
 								s_warehouse = get_serial_no_details(serial_id,old_date,vehicle_status)
+								print "s_warehouse------------", s_warehouse
 								if s_warehouse:
 									whse_data = whse_data + str(s_warehouse)
 							else:
@@ -112,7 +112,7 @@ def execute(filters=None):
 					inward_list.append(items_data)
 			else:
 				print "Missing------------", voucher_type, voucher_no
-			
+			total_vehicles_inward = total_vehicles_inward + 1
 		else:
 			print "sid------", rows[4]
 			print "voucher_type------", rows[2]
@@ -133,20 +133,18 @@ def execute(filters=None):
 						dest_whse = details['t_warehouse']
 						if dest_whse is not None:
 							t_warehouse = ""
-							whse_data = "Transfered To "
+							whse_data = "Transferred To "
 							if dest_whse == "Truck  - HSR":
 								t_warehouse = get_serial_no_details(serial_id,old_date,vehicle_status)
 								if t_warehouse:
 									whse_data = whse_data + str(t_warehouse)
 								else:
-									whse_data = "Transfered To Truck"
+									whse_data = "Transferred To Truck"
 							else:
 								whse_data = whse_data + str(dest_whse)
-
 					items_data = {"whse":whse_prev,"item":details['item_code'],
 							"serial_id":details['serial_no'],"dest_whse":whse_data}
 					outward_list.append(items_data)
-
 			elif voucher_type == "Delivery Note":
 				print "Delivery Note------", voucher_no
 				delivery_details = get_delivery_details(voucher_no)
@@ -160,7 +158,6 @@ def execute(filters=None):
 						whse_data = whse_data + str(customer_name)
 					items_data = {"whse":whse_prev,"item":item_code,"serial_id":serial_id,"dest_whse":whse_data}
 					outward_list.append(items_data)
-
 			elif voucher_type == "Sales Invoice":
 				print "voucher_no------", voucher_no
 				sales_invoice_details = get_sales_invoice_details(voucher_no)
@@ -176,7 +173,7 @@ def execute(filters=None):
 					outward_list.append(items_data)
 			else:
 				print "Missing------------", voucher_type, voucher_no
-
+			total_vehicles_outward = total_vehicles_outward + 1
 	allocation_count = 0
 	unallocation_count = 0
 	stock_ids_list = []
@@ -200,17 +197,19 @@ def execute(filters=None):
 			items_data = {"whse":warehouse,"item":item_code,"serial_id":data['serial_no'], 					    						"inward_outward_status": inward_outward_status}
 			items_in_stock_list.append(items_data)
 
-	summ_data.append(["Opening Stock", "", "Total:",opening_qty])
+	summ_data.append(["Opening Stock", "", "Total:",int(opening_qty)])
 	summ_data.append(["Vehicles Inward", "","", ""])
 	for data in inward_list:
 		summ_data.append([data['whse'], data['item'], data['serial_id'], data['dest_whse']])
 	summ_data.append(["", "","", ""])
+	summ_data.append(["Total Vehicles Inward ", int(total_vehicles_inward),"", ""])
 	summ_data.append(["", "","", ""])
 
 	summ_data.append(["Vehicles Outward", "","", ""])
 	for data in outward_list:
 		summ_data.append([data['whse'], data['item'], data['serial_id'], data['dest_whse']])
 	summ_data.append(["", "","", ""])
+	summ_data.append(["Total Vehicles Outward ", int(total_vehicles_outward),"", ""])
 	summ_data.append(["", "","", ""])
 
 	summ_data.append(["Vehicles In Stock", "","", ""])
@@ -219,7 +218,8 @@ def execute(filters=None):
 	summ_data.append(["", "","", ""])
 	summ_data.append(["", "","", ""])
 
-	summ_data.append([warehouse, "Allocated", allocation_count, "Unallocated", unallocation_count, "Total:", (allocation_count + 				unallocation_count)])
+	summ_data.append([warehouse, "Allocated", int(allocation_count), "Unallocated", int(unallocation_count), "Total:", 
+	int(allocation_count + unallocation_count)])
 	if allocation_count:
 		allocation_count = 0
 	if unallocation_count:
@@ -235,7 +235,7 @@ def get_serial_no_details(serial_id,old_date,vehicle_status):
 			warehouse = details[0]['t_warehouse']
 	else:
 		details = frappe.db.sql(""" select s_warehouse from `tabStock Entry Detail` where serial_no = %s and 
-				t_warehouse = 'Truck  - HSR' and modified < '"""+old_date+"""' order by modified desc""", serial_id, as_dict=1)
+				t_warehouse = 'Truck  - HSR' and modified < '"""+old_date+"""' order by modified desc""", serial_id, 					as_dict=1)
 		if len(details)!=0:
 			warehouse = details[0]['s_warehouse']
 	return warehouse
@@ -253,29 +253,18 @@ def get_destination_warehouse(voucher_no):
 	whse = frappe.db.sql(""" select sed.item_code,sed.t_warehouse,se.purpose,sed.s_warehouse,sed.serial_no,sed.modified from 
 		`tabStock Entry Detail` sed, `tabStock Entry` se where sed.parent = %s and sed.parent = se.name""", voucher_no, as_dict=1)
 	return whse
-'''
-def get_items_in_stock(filters):
-	item_code = filters.get("item_code")
-	to_date = filters.get("to_date")
-	if filters.get("warehouse") and filters.get("item_code"):
-		stock_list = frappe.db.sql(""" select booking_reference_number,vehicle_status,item_code,serial_no,delivery_date from
-		`tabSerial No` where warehouse=%s and item_code=%s and delivery_document_no is null or delivery_date > '""" + to_date + """' 			""", (warehouse, item_code), as_dict=1)
-	else:
-		stock_list = frappe.db.sql(""" select booking_reference_number,vehicle_status,item_code,serial_no,delivery_date from 
-		`tabSerial No` where warehouse=%s and delivery_document_no is null or delivery_date > '""" + to_date + """' """, warehouse, 			as_dict=1)
-		
-	return stock_list
-'''
 
 def get_items_in_stock(filters):
 	item_code = filters.get("item_code")
-	to_date = filters.get("to_date")
+	delivery_date = str(filters.get("to_date"))
+	to_date = str(filters.get("to_date"))
+	to_date = to_date + " " + "23:59:59.999999"
 	if filters.get("warehouse") and filters.get("item_code"):
-		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     item_code ='"""+item_code+"""' and modified <= '"""+to_date+"""') and serial_no in(select serial_no from 				     `tabSerial No` where item_code ='"""+item_code+"""' and delivery_document_no is null or
-			     delivery_date > '"""+to_date+"""') and item_code=%s""", item_code, as_dict=1)
+		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     item_code ='"""+item_code+"""' and modified <= date('"""+to_date+"""')) and serial_no in(select serial_no from 				     `tabSerial No` where item_code ='"""+item_code+"""' and delivery_document_no is null or
+			     delivery_date > date('"""+delivery_date+"""')) and item_code=%s""", item_code, as_dict=1)
 	else:
-		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= '"""+to_date+"""') and serial_no in(select serial_no from `tabSerial No` where 
-			     delivery_document_no is null or delivery_date > '"""+to_date+"""')""", as_dict=1)
+		stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= date('"""+to_date+"""')) and serial_no in(select serial_no from `tabSerial No` where 
+			     delivery_document_no is null or delivery_date > date('"""+delivery_date+"""'))""", as_dict=1)
 		print "---------------stock_list:", stock_list
 	return stock_list
  
@@ -319,6 +308,7 @@ def get_stock_ledger_entries(filters, items):
 	conditions = get_sle_conditions(filters)
 	from_date = str(filters.get("from_date"))
 	to_date = str(filters.get("to_date"))
+	print "from_date----------", from_date
 	if items:
 		item_conditions_sql = 'and sle.item_code in ({})'\
 			.format(', '.join(['"' + frappe.db.escape(i,percent=False) + '"' for i in items]))
@@ -400,21 +390,4 @@ def get_conditions(filters):
 				warehouse_details.rgt)
 
 	return conditions
-'''
-def get_opening_stock(filters):
-	opening_stock = 0
-	warehouse = filters.get("warehouse")
-	from_date = filters.get("from_date")
-	item_code = filters.get("item_code")
-	if filters.get("warehouse") and filters.get("item_code"):
-		opening_qty = frappe.db.sql("""select count(serial_no) as count from `tabStock Entry Detail` where 
-				t_warehouse = '"""+warehouse+"""' and serial_no not in (select serial_no from `tabStock Entry Detail` where 					s_warehouse ='"""+warehouse+"""' and modified < '"""+from_date+"""' and item_code ='"""+item_code+"""') and 					serial_no not in(select serial_no from `tabSerial No` where delivery_document_no is not null and 
-				delivery_date <'"""+from_date+"""' and item_code ='"""+item_code+"""') and item_code ='"""+item_code+"""' """,  				as_dict=1)
-	else:
-		opening_qty = frappe.db.sql("""select count(serial_no) as count from `tabStock Entry Detail` where 
-				t_warehouse = '"""+warehouse+"""' and serial_no not in (select serial_no from `tabStock Entry Detail` where 					s_warehouse ='"""+warehouse+"""' and modified < '"""+from_date+"""') and serial_no not in(select serial_no from 				`tabSerial No` where delivery_document_no is not null and delivery_date <'"""+from_date+"""')""", as_dict=1)
-	if opening_qty[0]['count'] is not None:
-		opening_stock = opening_qty[0]['count']
-	return opening_stock
-'''
 
