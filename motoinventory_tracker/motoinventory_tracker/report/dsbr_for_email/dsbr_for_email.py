@@ -173,18 +173,22 @@ def execute(filters=None):
 		inward_outward_status = ""
 		if data['serial_no'] is not None:
 			serial_no = str(data['serial_no'])
+			booking_reference_number = data['booking_reference_number']
+			item_code = data['item_code']
+			'''
 			customer_details = get_customer(serial_no)
 			booking_reference_number = customer_details[0]['booking_reference_number']
 			item_code = customer_details[0]['item_code']
 			delivery_date = customer_details[0]['delivery_date']
-			print "booking_reference_number------------", booking_reference_number
+			warehouse = str(customer_details[0]['warehouse'])
+			'''
 			if booking_reference_number is not None and booking_reference_number is not "":
 				inward_outward_status = "Allocated" + " (" + booking_reference_number + ")"
 				allocation_count = allocation_count + 1
 			else:
 				inward_outward_status = "Free Stock"
 				unallocation_count = unallocation_count + 1
-			items_data = {"whse":warehouse,"item":item_code,"serial_id":data['serial_no'], 					    						"inward_outward_status": inward_outward_status}
+			items_data = {"whse":warehouse,"item":item_code,"serial_id":data['serial_no'], 				       						"inward_outward_status": inward_outward_status}
 			items_in_stock_list.append(items_data)
 
 	summ_data.append(["Opening Stock", "", "Total:", int(opening_qty)])
@@ -250,10 +254,22 @@ def get_items_in_stock(filters):
 	delivery_date = str(datetime.date.today())
 	#date = datetime.datetime.strptime(to_date, "%Y-%m-%d %H:%M:%S.%f")
 	#print "to_date--------------", date
+	stock_list = frappe.db.sql("""select serial_no,item_code,booking_reference_number,warehouse from `tabSerial No` where 			     warehouse='"""+warehouse+"""' and modified <= '"""+to_date+"""' and delivery_document_no is null or 			     delivery_date > '"""+delivery_date+"""' """, as_dict=1)
+	return stock_list
+
+
+'''
+def get_items_in_stock(filters):
+	to_date = str(datetime.date.today())
+	to_date = to_date + " " + "23:59:59.999999"
+	delivery_date = str(datetime.date.today())
+	#date = datetime.datetime.strptime(to_date, "%Y-%m-%d %H:%M:%S.%f")
+	#print "to_date--------------", date
 	stock_list = frappe.db.sql("""select serial_no from `tabStock Entry Detail` where t_warehouse ='"""+warehouse+"""' and 				     serial_no not in (select serial_no from `tabStock Entry Detail` where s_warehouse ='"""+warehouse+"""' and 			     modified <= '"""+to_date+"""') and serial_no in(select serial_no from `tabSerial No` where 
 			     delivery_document_no is null or delivery_date > '"""+delivery_date+"""')""", as_dict=1)
 	#print "---------------stock_list:", stock_list
 	return stock_list
+'''
  
 def get_columns():
 	columns = [
