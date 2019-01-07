@@ -495,12 +495,18 @@ def submit_deliver_vehicle_stock_entry(serial_no):
 		return returnmsg
 
 @frappe.whitelist()
-def make_sales_invoice(serial_no):
+def make_sales_invoice(serial_no, source_warehouse):
 
 	from erpnext.selling.doctype.sales_order.sales_order import make_sales_invoice	
 	serialNoDoc = frappe.get_doc("Serial No", serial_no)
 	if serialNoDoc:
 		brn = serialNoDoc.booking_reference_number
+		#Start: Added on 21st Nov 2018 to accommodate the delivery of vehicle without a valid BRN
+		if not brn:
+			returnmsg = make_sales_invoice_for_vehicle_without_brn(serial_no, source_warehouse)
+			return returnmsg
+			#return """Error: The vehicle with Serial No {sln} does not have a valid booking reference number.""".format(sln = serial_no).encode('ascii')
+		#End: 21st Nov 2018
 		itemCode = serialNoDoc.item_code
 		if itemCode:
 			item_record = frappe.get_doc("Item", itemCode)
@@ -531,6 +537,25 @@ def make_sales_invoice(serial_no):
 		msg = """Error: The vehicle with the serial no {sln} does not exist on ERPNext""".format(sln = serial_no).encode('ascii')		
 		return msg
 
+#Start: Added on 20thDec 2018 to allow various control levels
+@frappe.whitelist()
+def change_status_low_medium(serial_no, current_warehouse):
+
+	#from frappe.utils.datetime import add_days, nowdate
+	currentrecord = frappe.get_doc("Serial No", serial_no)
+	if currentrecord:
+		currentrecord.booking_reference_number = None
+		currentrecord.vehicle_status = "Allocated but not Delivered"
+		currentrecord.delivery_required_at = current_warehouse
+		currentrecord.delivery_required_on = frappe.utils.nowdate() #default date today's date
+		currentrecord.save()
+		frappe.db.commit()
+		msg = """Success: Changed the status to Allocated but not Delivered for vehicle {vehicle} """.format(vehicle=serial_no).encode('ascii')
+		#print "I am in succssful change of status in low and medium"
+	else:
+		msg = """Error: Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
+	return msg
+#End: Added on 20th Dec 2018
 @frappe.whitelist()
 def change_status(serial_no, brn):
 
@@ -578,15 +603,61 @@ def change_status(serial_no, brn):
 		frappe.db.commit()
 		msg = """Success: Changed the status to Allocated but not Delivered for vehicle {vehicle} with booking reference number {bookrefno}""".format(vehicle=serial_no,bookrefno=brn).encode('ascii')
 	else:
-		msg = """"Error: Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
+		msg = """Error: Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
 	return msg
 
+#Start: Added on 18 Dec 2018
+@frappe.whitelist()
+def get_control_level():
+	
+	cd = "None"
+	#print "I am in get_control_level"
+	acd_record = frappe.db.sql("""Select acd.control_level from `tabAccess Control Document` acd where acd.is_default = True and acd.docstatus = 1""")
+	if acd_record:
+		#print "Yippe...ACD found"
+		cd = acd_record[0][0]
+	return cd
+	
+#End: Added on 18 Dec 2018
 @frappe.whitelist()
 def allocate_vehicle(serial_no, brn):
 
+	retVal = 0
+	d = dict()
+	d['level'] = "High" #default
+	d['retval'] = 0 #default return value
+	#Start: Added this on 10th Dec 2018
+	#print "I am in allocate_vehicle"
+	cd = get_control_level()
+	if cd == "High":
+		#print "The control level is high"
+		retVal = allocate_vehicle_high(serial_no, brn)
+		d['level'] = 2
+		d['retval'] = retVal
+		return d
+	if cd == "Medium":
+		#print "The control level is medium"
+		retVal = allocate_vehicle_medium(serial_no,brn)
+		d['level'] = 1
+		d['retval'] = retVal
+		return d
+	if cd == "Low":
+		#print "The control level is low" 
+		retVal = allocate_vehicle_low(serial_no)
+		d['level'] = 0
+		d['retval'] = retVal
+		return d
+	if cd == "None":
+		d['level'] = None
+		d['retval'] = 0
+	#End: Added this on 10th Dec 2018
+	return d
+
+def allocate_vehicle_high(serial_no,brn):
+
 	returnval = 0
 	salesorder_record = frappe.db.sql("""select so.name from `tabSales Order` so where so.booking_reference_number = %(bookingrefno)s and so.docstatus = 1""",{'bookingrefno': brn})
-	if not salesorder_record:
+	if not salesorder_record or not brn:
 		return -1
 			
 	if salesorder_record :
@@ -627,6 +698,34 @@ def allocate_vehicle(serial_no, brn):
 		else:
 			return 0			
 	return returnval
+
+def allocate_vehicle_medium(serial_no,brn):
+	if not brn:
+		return allocate_vehicle_low(serial_no)
+	else:
+		return  allocate_vehicle_high(serial_no,brn)
+		#if retval == -1:
+		#	return allocate_vehicle_low(serial_no)
+
+	
+def allocate_vehicle_low(serial_no):
+	
+	serial_record = frappe.get_doc("Serial No",serial_no)
+	if serial_record:
+		vehicle_status = serial_record.vehicle_status
+		if vehicle_status == "Received but not Allocated":
+			return 3
+		else:
+			if vehicle_status == "Delivered":
+				return -7
+			else:
+				if vehicle_status == "Invoiced but not Received" : #Vehcile status is IBNR
+					return -8
+				else:
+					return -9	#vehicle status is ABND
+	else:
+		return 0
+	
 
 @frappe.whitelist()
 def submit_sales_invoice(serial_no):
@@ -669,6 +768,55 @@ def cancel_sales_invoice(serial_no):
 		return returnmsg
 #End: Added on 14th Feb 2018
 
+#Start: Added on 22nd Nov 2018 to accommodate delivery of vehicles without BRN
+@frappe.whitelist()
+def make_sales_invoice_for_vehicle_without_brn(serial_no, source_warehouse):
+	
+	serial_record = frappe.get_doc("Serial No", serial_no)
+	Dummy = 'dummy_customer'
+	if serial_record:
+		customer_record = frappe.db.sql("""select ct.name from `tabCustomer` ct where ct.customer_name = %s""",(Dummy))
+		if customer_record:
+			dummycustomer = customer_record[0][0]
+			#print "The dummy customer is:"
+			#print dummycustomer
+			item = serial_record.item_code
+			
+			item_record = frappe.get_doc("Item", item)
+			newJson = {
+				"customer": dummycustomer,
+				"doctype": "Sales Invoice",
+				"update_stock": True,
+				"items": [
+					 ]		
+				 }
+			req_qty = 1
+			allowzero_valuation = True
+			innerJson =	{
+						"doctype": "Sales Invoice Item",
+						"item_code": item,
+						"description": item_record.description,
+						"uom": item_record.stock_uom,
+						"qty": req_qty,
+						"serial_no": serial_no,
+						"warehouse":source_warehouse,
+						"allow_zero_valuation_rate": allowzero_valuation
+			  		}
+		
+			newJson["items"].append(innerJson)
+	
+			doc = frappe.new_doc("Sales Invoice")
+			doc.update(newJson)
+			doc.save()
+			frappe.db.commit()
+			return """Success: Successfully created a sales invoice {sinv} billed to dummy customer for vehicle with serial no {sln}""".format(sinv = doc.name, sln = serial_no).encode('ascii')
+		else:
+			return """Error: Could not find a dummy customer to bill the invoice to. Please create a Customer called dummy_customer on ERPNext and try again."""
+	else:
+		return """Error: Could not find vehicle with serial no {sln} to make a sales invoice""".format(sln = serial_no).encode('ascii')
+
+#End: Added on 22nd Nov 2018
+
 
 @frappe.whitelist()
 def make_text_file(frm):
@@ -704,5 +852,3 @@ def make_text_file(frm):
 	frappe.msgprint(_("Text File created - Please check File List to download the file"))
 	ferp.save()
 	f.close()
-
-
