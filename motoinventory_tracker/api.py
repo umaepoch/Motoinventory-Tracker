@@ -1,10 +1,12 @@
-# Epoch Integrated solution for Royal Enfield Tracking system
+# Epoch Integrated solution for Vehicle Tracking system
 
 from __future__ import unicode_literals
 import frappe
 from frappe import _, msgprint
 from frappe.utils import flt, getdate, datetime
+import frappe.defaults
 
+################Method to check the status of a particular serial no#########################3
 @frappe.whitelist()
 def validate_serial_no(serial_no):
 
@@ -27,12 +29,75 @@ def validate_serial_no(serial_no):
 				doc_status = 2
 	return doc_status
 
+### methods called from motoinventory_tracker.hooks.py to allow only 1 default User access info document and 1 default Access Control Docu##
+@frappe.whitelist()
+def reset_default_valuesUAID(doc, method):
+	records = frappe.db.sql("""select acd.name from `tabUser Access Information Document` acd where acd.is_default = True""")
+	if records:
+		for record in records:
+			name = record[0]
+			#print("This record has been unset as default",name)
+			if(name != doc.name):
+				frappe.db.sql("""update `tabUser Access Information Document` acd set is_default = False where acd.name = %s""", (name))
+				
+		frappe.msgprint('Done')
 
 @frappe.whitelist()
-def simply_return_message():
-	return 'hello'
+def reset_defaults_ACD(doc, method):
+	records = frappe.db.sql("""select acd.name from `tabAccess Control Document` acd where acd.is_default = True""")
+	if records:
+		for record in records:
+			name = record[0]
+			#print("This record has been unset as default",name)
+			if(name != doc.name):
+				frappe.db.sql("""update `tabAccess Control Document` acd set is_default = False where acd.name = %s""", (name))
+				
+		frappe.msgprint('Done')
 
+##################Method to create a new serial no#################################
+@frappe.whitelist()
+def make_new_serial_no_entry(serial_no,item_code):
+	
+	default_company = frappe.defaults.get_global_default("company")	
+	#record = frappe.get_doc("Item",item_code)
+	#if record:
+	#	Company = record.company
+	#else:
+	#	Company = default_company
+	newJson = {
+		"serial_no": serial_no,
+		"doctype": "Serial No",
+		"item_code": item_code,
+		"vehicle_status": "Invoiced but not Received",
+		"company": default_company		
+		 }
+	
+	doc = frappe.new_doc("Serial No")
+	doc.update(newJson)
+	doc.save()
+	frappe.db.commit()
+	return "Success: A new serial no {} is created".format(doc.name)
 
+#Start: To reflect changes in the user's base warehouse location 26th Feb 2019
+#######################The get the default WH Loc of the logged in user and other info for the logged user##############################
+@frappe.whitelist()
+def getUserDetails(loggedUser):
+	retVal = dict()
+	record = frappe.db.sql("""select uaid.name from `tabUser Access Information Document` uaid where uaid.is_default = True and uaid.docstatus = 1""")
+	if record:
+		userdetail = frappe.db.sql("""select uad.base_warehouse_location from `tabUser Access Details` uad where uad.parent = %(str1)s and uad.user = %(str2)s""",{'str1':record[0], 'str2': loggedUser})
+		if userdetail:
+			#d = dict()
+			#d['name'] = loggedUser
+			#d['base_warehouse_location'] = userdetail[0][0]
+			return userdetail[0][0]
+		else:
+			return "Error: The base warehouse location has not been set for the user {}. Please contact the administrator".format(loggedUser)
+	else:
+		return "Error: The User Access Details have not been set up on the server. Please contact the administrator to rectify the error."
+		
+#End: 26th Feb 2019
+####################The methods to receive the vehicles in the current WHS######################################################3
 @frappe.whitelist()
 def make_stock_entry(serial_no,destination_warehouse):
 
@@ -80,11 +145,11 @@ def make_stock_entry(serial_no,destination_warehouse):
 			doc.save()
 			frappe.db.commit()
 			docname = doc.name
-			return """Success: Stock entry {sle} created for vehicle with serial no {sln}""".format(sle = docname, sln = serial_no).encode('ascii')
+			return "Success: Stock entry {} created for vehicle with serial no {}".format(docname, serial_no)
 		else:
-			return """Error: The item code does not exist for the vehicle with serial no {sln}. Could not create a stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
+			return "Error: The item code does not exist for the vehicle with serial no {}. Could not create a stock entry for this vehicle.".format(serial_no)
 	else:
-		return """Error: Could not find vehicle with serial no {sln}. Could not create a stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
+		return "Error: Could not find vehicle with serial no {}. Could not create a stock entry for this vehicle.".format(serial_no)
 
 @frappe.whitelist()
 def submit_stock_entry(serial_no):
@@ -108,9 +173,9 @@ def submit_stock_entry(serial_no):
 		
 			record.submit()
 			frappe.db.commit()
-			returnmsg = """Success: Submitted the stock entry {stockentryname} for vehicle {sln}""".format(stockentryname=record.name, sln=serial_no).encode('ascii')
+			returnmsg = "Success: Submitted the stock entry {} for vehicle {}".format(record.name, serial_no)
 		else:
-			returnmsg = """Error: Could not find the stock entry for vehicle {sln} in the draft state to submit!""".format(sln=serial_no).encode('ascii')
+			returnmsg = "Error: Could not find the stock entry for vehicle {} in the draft state to submit!".format(serial_no)
 		
 	return returnmsg
 
@@ -123,240 +188,7 @@ def cancel_stock_entry(serial_no):
 	frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Invoiced but not Received' where sn.name = (select se.serial_no from `tabStock Entry Detail` se where se.parent = %s)""", (record.name))
 		
 	record.cancel()
-
-
-@frappe.whitelist()
-def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
-
-	space = " "
-	hyphen = "-"
-	
-	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Transfer' and sd.s_warehouse = %(string2)s """, {'string1': serial_no, 'string2': source_warehouse})
-	if records:
-		#added code on Oct 13th 2017....start here
-		serialNoTableRecord = frappe.db.sql("""select sn.serial_no from `tabSerial No` sn where sn.warehouse = %(stringwh)s and sn.serial_no = %(stringserialno)s""", {'stringwh': target_warehouse, 'stringserialno': serial_no})
-		if serialNoTableRecord: 
-		#13th Oct change ....end here. The above condition means that there exists a serial no which is originating at source and still
-		#on truck, so cannot have another Stock entry
-			return 'Error: The stock entry for this serial no already exists'
-	
-	innerJson = ""
-	
-	record = frappe.get_doc("Serial No", serial_no)
-	if record:
-		item = record.item_code
-		at_warehouse = record.warehouse
-		veh_status = record.vehicle_status
-		company = record.company
-		companyDoc = frappe.get_doc("Company", company)
-		companyabbr = space
-		if companyDoc:
-			companyabbr = companyDoc.abbr
-					
-		
-		if at_warehouse != source_warehouse:
-			message = """Error: The vehicle with serial no {vehicle} is not present in the warehouse {swh} for it to be moved/transferred. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse).encode('ascii')
-			return message
-
-		if item:
-			item_record = frappe.get_doc("Item", item)
-
-			newJson = {
-				"company": company,
-				"doctype": "Stock Entry",
-				"title": "Material Transfer",
-				"purpose": "Material Transfer",
-				"items": [
-				]
-			}
-		
-			req_qty = 1
-			allowzero_valuation = True
-			innerJson =	{
-						"doctype": "Stock Entry Detail",
-						"item_code": item,
-						"description": item_record.description,
-						"uom": item_record.stock_uom,
-						"qty": req_qty,
-						"serial_no": serial_no,
-						"s_warehouse":source_warehouse,
-						"t_warehouse": target_warehouse,
-						"allow_zero_valuation_rate": allowzero_valuation
-			  		}
-		
-			newJson["items"].append(innerJson)
-	
-			doc = frappe.new_doc("Stock Entry")
-			doc.update(newJson)
-			doc.save()
-			docname = doc.name
-			frappe.db.commit()
-			return """Success: Stock entry {ste} created for vehicle {sln}.""".format(ste=docname,sln=serial_no).encode('ascii')
-		else:
-			return """Error: The Item Code could not be found for vehicle with serial no {sln}, not creating a stock entry""".format(sln=serial_no).encode('ascii')
-	else:
-		return """Error: The vehicle with serial no {sln} could not be found, not creating a stock entry""".format(sln=serial_no).encode('ascii')
-
-
-@frappe.whitelist()
-def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_warehouse):
-
-	space =" " 
-	hyphen = "-"
-			
-	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Transfer' and sd.t_warehouse = %(string2)s """, {'string1': serial_no, 'string2': destination_warehouse})
-	if records:
-		
-		#added on 13Oct to allow multiple STEs for the same serial no and destination provided there is no STE with source as Truck
-		serialNoRecord = frappe.db.sql("""select sn.serial_no from `tabSerial No` sn where sn.serial_no = %(stringslno)s and sn.warehouse = %(stringwh)s""", {'stringslno' : serial_no, 'stringwh': destination_warehouse})
-		if serialNoRecord:
-		#End change		
-			return 'Error: The stock entry for this serial no already exists'
-	
-	innerJson = ""
-	
-	record = frappe.get_doc("Serial No", serial_no)
-	if record:
-		item = record.item_code
-		at_warehouse = record.warehouse
-		veh_status = record.vehicle_status
-		company = record.company
-		comapnyabbr = space
-		companyDoc = frappe.get_doc("Company",company)
-		if companyDoc:
-			companyabbr = companyDoc.abbr
-		
-		if at_warehouse == destination_warehouse:
-			message = """Error: The vehicle with serial no {vehicle} is already at the warehouse {swh}, cannot make a stock entry""".format(vehicle=serial_no,swh=destination_warehouse).encode('ascii')
-			return message
-		if at_warehouse != source_warehouse:
-			errormsg = """Error: The vehicle with serial no {vehicle} is not present at the warehouse {swh} for it to be moved to {dwh}. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse,dwh=destination_warehouse).encode('ascii')
-			return errormsg
-		if item:
-			item_record = frappe.get_doc("Item", item)
-
-			newJson = {
-				"company": company,
-				"doctype": "Stock Entry",
-				"title": "Material Transfer",
-				"purpose": "Material Transfer",
-				"items": [
-				]
-			}
-		
-			req_qty = 1
-			allowzero_valuation = True
-			innerJson =	{
-						"doctype": "Stock Entry Detail",
-						"item_code": item,
-						"description": item_record.description,
-						"uom": item_record.stock_uom,
-						"qty": req_qty,
-						"serial_no": serial_no,
-						"s_warehouse": source_warehouse,
-						"t_warehouse": destination_warehouse,
-						"allow_zero_valuation_rate": allowzero_valuation
-					  }
-		
-			newJson["items"].append(innerJson)
-	
-			doc = frappe.new_doc("Stock Entry")
-			doc.update(newJson)
-			doc.save()
-			docname = doc.name
-			frappe.db.commit()
-			return """Success: Stock entry {sle} created for vehicle with serial no {sln}""".format(sle=docname,sln=serial_no).encode('ascii')
-		else:
-			return """Error: Could not find item code for the vehicle with serial no {sln}. Could not create stock entry for this vehicle.""".format(sln=serial_no).encode('ascii')
-#added tis line to deal with the else part of not finidng the scanned serial no document
-	else:
-		return """Error: Serial No {sln} couldnt not be found. Could not create a stock entry for this vehicle""".format(sln = serial_no).encode('ascii')
-
-#to make delivery note and submit it
-
-
-@frappe.whitelist()
-def make_delivery_note(serial_no,customer_name=None):
-	
-	if(customer_name == None):
-		customer_name = "Customer_1"
-
-	records = frappe.db.sql("""select sd.parent from `tabDelivery Note Item` sd, `tabDelivery Note` se where sd.parent = se.name and sd.serial_no = %s""", (serial_no))
-	if records:
-		return 'The delivery note for this serial no already exists'
-	
-	innerJson = ""
-	
-	record = frappe.get_doc("Serial No", serial_no)
-	if record:
-		item = record.item_code
-		
-		veh_status = record.vehicle_status
-		company = record.company
-		warehouse_at = record.delivery_required_at
-
-	if item:
-		item_record = frappe.get_doc("Item", item)
-
-	
-	#if veh_status == "Invoiced but not Received":
-	exchange_rate = 1.000
-
-	newJson = {
-		"company": company,
-		"doctype": "Delivery Note",
-		"title": customer_name,
-		"customer": customer_name,
-		"items": [
-		]
-	}
-		
-	req_qty = 1
-	allowzero_valuation = True
-	innerJson =	{
-				"doctype": "Delivery Note Item",
-				"item_code": item,
-				"description": item_record.description,
-				"uom": item_record.stock_uom,
-				"qty": req_qty,
-				"serial_no": serial_no,
-				"allow_zero_valuation_rate": allowzero_valuation,
-				"warehouse": warehouse_at				
-			  }
-		
-	newJson["items"].append(innerJson)
-	
-	doc = frappe.new_doc("Delivery Note")
-	doc.update(newJson)
-	doc.save()
-	frappe.db.commit()
-	return doc.name
-
-@frappe.whitelist()
-def submit_delivery_note(serial_no):
-
-	records = frappe.db.sql("""select sd.parent from `tabDelivery Note Item` sd, `tabDelivery Note` se where sd.serial_no = %s and se.docstatus = 0 and sd.parent = se.name""", (serial_no))
-	
-	for r in records:
-		
-		record = frappe.get_doc("Delivery Note", r[0])
-		
-		frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Delivered' where sn.name = (select se.serial_no from `tabDelivery Note Item` se where se.parent = %s)""", (record.name))
-		
-		record.submit()
-	frappe.db.commit()
-
-@frappe.whitelist()
-def cancel_delivery_note(serial_no):
-
-	records = frappe.db.sql("""select sd.parent from `tabDelivery note Item` sd, `tabDelivery Note` se where sd.parent = se.name and sd.serial_no = %s""", (serial_no))
-	record = frappe.get_doc("Delivery Note", records[0][0])
-	
-	frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Allocated but not Delivered' where sn.name = (select se.serial_no from `tabDelivery Note Item` se where se.parent = %s)""", (record.name))
-		
-	record.cancel()
-	frappe.db.commit()
-
+###############################Method to send email to recipients with the IBNR list#######################################################
 @frappe.whitelist()
 def send_IBNR_mail(emailadd=[]):
 
@@ -404,15 +236,22 @@ def send_IBNR_mail(emailadd=[]):
 			invoiced_message=_("Invoiced but not Received list is as follows <p>  {invoicedlist}</p>").format(invoicedlist=submessage)	
 			)	
 	frappe.sendmail(recipients=emailadd, sender=sender, subject=subject,message=message, delayed=False)
-	return """Success: Sent email to recipients {emailadd}""".format(emailadd=emailadd).encode('ascii')
-
-
+	return "Success: Sent email to recipients {}".format(emailadd)
+##########################The following methods allow the loading and unloading of vehicles to truck and other WHs#############################
 @frappe.whitelist()
-def make_delivervehicle_stock_entry(serial_no,source_warehouse):
+def make_movement_stock_entry(serial_no,source_warehouse,target_warehouse):
 
-	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Issue' and sd.s_warehouse = %(string2)s """, {'string1': serial_no, 'string2': source_warehouse})
+	space = " "
+	hyphen = "-"
+	
+	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Transfer' and sd.s_warehouse = %(string2)s """, {'string1': serial_no, 'string2': source_warehouse})
 	if records:
-		return 'The stock entry for this serial no already exists'
+		#added code on Oct 13th 2017....start here
+		serialNoTableRecord = frappe.db.sql("""select sn.serial_no from `tabSerial No` sn where sn.warehouse = %(stringwh)s and sn.serial_no = %(stringserialno)s""", {'stringwh': target_warehouse, 'stringserialno': serial_no})
+		if serialNoTableRecord: 
+		#13th Oct change ....end here. The above condition means that there exists a serial no which is originating at source and still
+		#on truck, so cannot have another Stock entry
+			return "Error: The stock entry for this serial no already exists"
 	
 	innerJson = ""
 	
@@ -422,77 +261,131 @@ def make_delivervehicle_stock_entry(serial_no,source_warehouse):
 		at_warehouse = record.warehouse
 		veh_status = record.vehicle_status
 		company = record.company
-
-	if at_warehouse != source_warehouse:
-		message = """The vehicle with serial no {vehicle} is not present in the warehouse {swh} for it to be delivered. Cannot make a stock entry""".format(vehicle=serial_no,swh=source_warehouse).encode('ascii')
-		return message
-
-	if item:
-		item_record = frappe.get_doc("Item", item)
-
-	
-	newJson = {
-		"company": company,
-		"doctype": "Stock Entry",
-		"title": "Material Issue",
-		"purpose": "Material Issue",
-		"items": [
-		]
-	}
+		companyDoc = frappe.get_doc("Company", company)
+		companyabbr = space
+		if companyDoc:
+			companyabbr = companyDoc.abbr
+					
 		
-	req_qty = 1
-	allowzero_valuation = True
-	innerJson =	{
-				"doctype": "Stock Entry Detail",
-				"item_code": item,
-				"description": item_record.description,
-				"uom": item_record.stock_uom,
-				"qty": req_qty,
-				"serial_no": serial_no,
-				"s_warehouse":source_warehouse,
-				"allow_zero_valuation_rate": allowzero_valuation
-			  }
+		if at_warehouse != source_warehouse:
+			message = "Error: The vehicle with serial no {} is not present in the warehouse {} for it to be moved/transferred. Cannot make a stock entry".format(serial_no,source_warehouse)
+			return message
+
+		if item:
+			item_record = frappe.get_doc("Item", item)
+
+			newJson = {
+				"company": company,
+				"doctype": "Stock Entry",
+				"title": "Material Transfer",
+				"purpose": "Material Transfer",
+				"items": [
+				]
+			}
 		
-	newJson["items"].append(innerJson)
+			req_qty = 1
+			allowzero_valuation = True
+			innerJson =	{
+						"doctype": "Stock Entry Detail",
+						"item_code": item,
+						"description": item_record.description,
+						"uom": item_record.stock_uom,
+						"qty": req_qty,
+						"serial_no": serial_no,
+						"s_warehouse":source_warehouse,
+						"t_warehouse": target_warehouse,
+						"allow_zero_valuation_rate": allowzero_valuation
+			  		}
+		
+			newJson["items"].append(innerJson)
 	
-	doc = frappe.new_doc("Stock Entry")
-	doc.update(newJson)
-	doc.save()
-	frappe.db.commit()
-	return doc.name
+			doc = frappe.new_doc("Stock Entry")
+			doc.update(newJson)
+			doc.save()
+			docname = doc.name
+			frappe.db.commit()
+			return "Success: Stock entry {} created for vehicle {}.".format(docname,serial_no)
+		else:
+			return "Error: The Item Code could not be found for vehicle with serial no {}, not creating a stock entry".format(serial_no)
+	else:
+		return "Error: The vehicle with serial no {} could not be found, not creating a stock entry""".format(serial_no)
+
 
 @frappe.whitelist()
-def make_new_serial_no_entry(serial_no,item_code):
-	
-	newJson = {
-		"serial_no": serial_no,
-		"doctype": "Serial No",
-		"item_code": item_code,
-		"vehicle_status": "Invoiced but not Received"		
-	}
+def make_unloadvehicle_stock_entry(serial_no,destination_warehouse,source_warehouse):
 
+	space =" " 
+	hyphen = "-"
+			
+	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Transfer' and sd.t_warehouse = %(string2)s """, {'string1': serial_no, 'string2': destination_warehouse})
+	if records:
+		
+		#added on 13Oct to allow multiple STEs for the same serial no and destination provided there is no STE with source as Truck
+		serialNoRecord = frappe.db.sql("""select sn.serial_no from `tabSerial No` sn where sn.serial_no = %(stringslno)s and sn.warehouse = %(stringwh)s""", {'stringslno' : serial_no, 'stringwh': destination_warehouse})
+		if serialNoRecord:
+		#End change		
+			return "Error: The stock entry for this serial no already exists"
 	
-	doc = frappe.new_doc("Serial No")
-	doc.update(newJson)
-	doc.save()
-	frappe.db.commit()
-	return """"Success: A new serial no {doc} is created""".format(doc=doc.name).encode('ascii')
-
-@frappe.whitelist()
-def submit_deliver_vehicle_stock_entry(serial_no):
+	innerJson = ""
 	
-	new_status = "Delivered"
-	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.serial_no = %s and se.docstatus = 0 and sd.parent = se.name""", (serial_no))
-	
-	record = frappe.get_doc("Stock Entry", records[0][0])
+	record = frappe.get_doc("Serial No", serial_no)
 	if record:
-		name = record.name
-		frappe.db.sql("""update `tabSerial No` sn set vehicle_status = %(string1)s where sn.name = (select se.serial_no from `tabStock Entry Detail` se where se.parent = %(string2)s)""", {'string1': new_status, 'string2': name})
+		item = record.item_code
+		at_warehouse = record.warehouse
+		veh_status = record.vehicle_status
+		company = record.company
+		comapnyabbr = space
+		companyDoc = frappe.get_doc("Company",company)
+		if companyDoc:
+			companyabbr = companyDoc.abbr
 		
-		record.submit()
-		frappe.db.commit()
-		returnmsg = """Submitted the stock entry {stockentryname} successfully!""".format(stockentryname=record.name).encode('ascii')
-		return returnmsg
+		if at_warehouse == destination_warehouse:
+			message = "Error: The vehicle with serial no {} is already at the warehouse {}, cannot make a stock entry".format(serial_no,destination_warehouse)
+			return message
+		if at_warehouse != source_warehouse:
+			errormsg = "Error: The vehicle with serial no {} is not present at the warehouse {} for it to be moved to {}. Cannot make a stock entry""".format(serial_no,source_warehouse,destination_warehouse)
+			return errormsg
+		if item:
+			item_record = frappe.get_doc("Item", item)
+
+			newJson = {
+				"company": company,
+				"doctype": "Stock Entry",
+				"title": "Material Transfer",
+				"purpose": "Material Transfer",
+				"items": [
+				]
+			}
+		
+			req_qty = 1
+			allowzero_valuation = True
+			innerJson =	{
+						"doctype": "Stock Entry Detail",
+						"item_code": item,
+						"description": item_record.description,
+						"uom": item_record.stock_uom,
+						"qty": req_qty,
+						"serial_no": serial_no,
+						"s_warehouse": source_warehouse,
+						"t_warehouse": destination_warehouse,
+						"allow_zero_valuation_rate": allowzero_valuation
+					  }
+		
+			newJson["items"].append(innerJson)
+	
+			doc = frappe.new_doc("Stock Entry")
+			doc.update(newJson)
+			doc.save()
+			docname = doc.name
+			frappe.db.commit()
+			return "Success: Stock entry {} created for vehicle with serial no {}""".format(docname,serial_no)
+		else:
+			return "Error: Could not find item code for the vehicle with serial no {}. Could not create stock entry for this vehicle.".format(serial_no)
+#added tis line to deal with the else part of not finidng the scanned serial no document
+	else:
+		return "Error: Serial No {} couldnt not be found. Could not create a stock entry for this vehicle""".format(serial_no)
+
+############The methods for making sales invoices to tackle vehicle allocation and delivery based on the control levels####################
 
 @frappe.whitelist()
 def make_sales_invoice(serial_no, source_warehouse):
@@ -534,7 +427,7 @@ def make_sales_invoice(serial_no, source_warehouse):
 		else:
 			return 'Error: The sales order for this vehicle doesnt exist'
 	else:
-		msg = """Error: The vehicle with the serial no {sln} does not exist on ERPNext""".format(sln = serial_no).encode('ascii')		
+		msg = "Error: The vehicle with the serial no {} does not exist on ERPNext".format(serial_no)		
 		return msg
 
 #Start: Added on 20thDec 2018 to allow various control levels
@@ -550,10 +443,10 @@ def change_status_low_medium(serial_no, current_warehouse):
 		currentrecord.delivery_required_on = frappe.utils.nowdate() #default date today's date
 		currentrecord.save()
 		frappe.db.commit()
-		msg = """Success: Changed the status to Allocated but not Delivered for vehicle {vehicle} """.format(vehicle=serial_no).encode('ascii')
+		msg = "Success: Changed the status to Allocated but not Delivered for vehicle {}".format(serial_no)
 		#print "I am in succssful change of status in low and medium"
 	else:
-		msg = """Error: Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
+		msg = "Error: Could not find vehicle with serial no {} on ERPNext".format(serial_no)
 	return msg
 #End: Added on 20th Dec 2018
 @frappe.whitelist()
@@ -593,17 +486,17 @@ def change_status(serial_no, brn):
 				currentrecord.delivery_required_at = sales_order_doc.delivery_required_at
 				#currentrecord.save()
 			else:
-				msg = """Error: Something went wrong while fetching the sales order with booking reference number {bookrefno} from the backend""".format(bookrefno=brn).encode('ascii')
+				msg = "Error: Something went wrong while fetching the sales order with booking reference number {} from the backend".format(brn)
 				return msg
 		else:
-			msg = """Error: There is no Sales Order avaliable with the booking reference number {brefn} on ERPNext""".format(brefn=brn).encode('ascii')
+			msg = "Error: There is no Sales Order avaliable with the booking reference number {} on ERPNext""".format(brn)
 			return msg 
 		#end: change on 21st Jan 2018
 		currentrecord.save()
 		frappe.db.commit()
-		msg = """Success: Changed the status to Allocated but not Delivered for vehicle {vehicle} with booking reference number {bookrefno}""".format(vehicle=serial_no,bookrefno=brn).encode('ascii')
+		msg = "Success: Changed the status to Allocated but not Delivered for vehicle {} with booking reference number {}".format(serial_no,brn)
 	else:
-		msg = """Error: Could not find vehicle with serial no {vehicle} on ERPNext """.format(vehicle=serial_no).encode('ascii')
+		msg = "Error: Could not find vehicle with serial no {} on ERPNext".format(serial_no)
 	return msg
 
 #Start: Added on 18 Dec 2018
@@ -745,9 +638,9 @@ def submit_sales_invoice(serial_no):
 			recordfoundandsubmitted = True
 			frappe.db.commit()
 	if recordfoundandsubmitted:
-		returnmsg = """Success: Sales Invoice submitted for the vehicle with Serial No {sln}""".format(sln=serial_no).encode('ascii')
+		returnmsg = "Success: Sales Invoice submitted for the vehicle with Serial No {}".format(serial_no)
 	else:
-		returnmsg = """Error: Sales Invoice for the vehicle with Serial No {sln} could not be found and submitted""".format(sln=serial_no).encode('ascii')
+		returnmsg = "Error: Sales Invoice for the vehicle with Serial No {} could not be found and submitted".format(sln=serial_no)
 	return returnmsg
 
 #Start : Added on 14th Feb 2018 to allow rolling back of a sales invoice
@@ -762,9 +655,9 @@ def cancel_sales_invoice(serial_no):
 			frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Allocated but not Delivered' where sn.name = (select se.serial_no from `tabSales Invoice Item` se where se.parent = %s)""",(record.name))
 			record.cancel()
 			frappe.db.commit()
-			returnmsg = """Success: Previous delivery and assocaiated sales invoice of vehicle with serial no {sln} cancelled. Changed the vehicle status back to Allocated but not Delivered.""".format(sln=serial_no).encode('ascii')
+			returnmsg = "Success: Previous delivery and assocaiated sales invoice of vehicle with serial no {} cancelled. Changed the vehicle status back to Allocated but not Delivered.".format(serial_no).encode('ascii')
 		else:
-			returnmsg = """Error: Something went wrong in fetching the Sales Invoice for vehicle with serial no {sln}""".format(sln=serial_no).encode('ascii')
+			returnmsg = "Error: Something went wrong in fetching the Sales Invoice for vehicle with serial no {}".format(serial_no)
 		return returnmsg
 #End: Added on 14th Feb 2018
 
@@ -809,15 +702,170 @@ def make_sales_invoice_for_vehicle_without_brn(serial_no, source_warehouse):
 			doc.update(newJson)
 			doc.save()
 			frappe.db.commit()
-			return """Success: Successfully created a sales invoice {sinv} billed to dummy customer for vehicle with serial no {sln}""".format(sinv = doc.name, sln = serial_no).encode('ascii')
+			return "Success: Successfully created a sales invoice {} billed to dummy customer for vehicle with serial no {}".format(doc.name,serial_no)
 		else:
-			return """Error: Could not find a dummy customer to bill the invoice to. Please create a Customer called dummy_customer on ERPNext and try again."""
+			return "Error: Could not find a dummy customer to bill the invoice to. Please create a Customer called dummy_customer on ERPNext and try again."
 	else:
-		return """Error: Could not find vehicle with serial no {sln} to make a sales invoice""".format(sln = serial_no).encode('ascii')
+		return "Error: Could not find vehicle with serial no {} to make a sales invoice".format(serial_no)
 
 #End: Added on 22nd Nov 2018
 
+######################Some misc methods to take care of future requirements change to deliver vehicles##################################
+#to make delivery note and submit it
 
+
+@frappe.whitelist()
+def make_delivery_note(serial_no,customer_name=None):
+	
+	if(customer_name == None):
+		customer_name = "Customer_1"
+
+	records = frappe.db.sql("""select sd.parent from `tabDelivery Note Item` sd, `tabDelivery Note` se where sd.parent = se.name and sd.serial_no = %s""", (serial_no))
+	if records:
+		return 'The delivery note for this serial no already exists'
+	
+	innerJson = ""
+	
+	record = frappe.get_doc("Serial No", serial_no)
+	if record:
+		item = record.item_code
+		
+		veh_status = record.vehicle_status
+		company = record.company
+		warehouse_at = record.delivery_required_at
+
+	if item:
+		item_record = frappe.get_doc("Item", item)
+
+	
+	#if veh_status == "Invoiced but not Received":
+	exchange_rate = 1.000
+
+	newJson = {
+		"company": company,
+		"doctype": "Delivery Note",
+		"title": customer_name,
+		"customer": customer_name,
+		"items": [
+		]
+	}
+		
+	req_qty = 1
+	allowzero_valuation = True
+	innerJson =	{
+				"doctype": "Delivery Note Item",
+				"item_code": item,
+				"description": item_record.description,
+				"uom": item_record.stock_uom,
+				"qty": req_qty,
+				"serial_no": serial_no,
+				"allow_zero_valuation_rate": allowzero_valuation,
+				"warehouse": warehouse_at				
+			  }
+		
+	newJson["items"].append(innerJson)
+	
+	doc = frappe.new_doc("Delivery Note")
+	doc.update(newJson)
+	doc.save()
+	frappe.db.commit()
+	return doc.name
+
+@frappe.whitelist()
+def submit_delivery_note(serial_no):
+
+	records = frappe.db.sql("""select sd.parent from `tabDelivery Note Item` sd, `tabDelivery Note` se where sd.serial_no = %s and se.docstatus = 0 and sd.parent = se.name""", (serial_no))
+	
+	for r in records:
+		
+		record = frappe.get_doc("Delivery Note", r[0])
+		
+		frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Delivered' where sn.name = (select se.serial_no from `tabDelivery Note Item` se where se.parent = %s)""", (record.name))
+		
+		record.submit()
+	frappe.db.commit()
+
+@frappe.whitelist()
+def cancel_delivery_note(serial_no):
+
+	records = frappe.db.sql("""select sd.parent from `tabDelivery note Item` sd, `tabDelivery Note` se where sd.parent = se.name and sd.serial_no = %s""", (serial_no))
+	record = frappe.get_doc("Delivery Note", records[0][0])
+	
+	frappe.db.sql("""update `tabSerial No` sn set vehicle_status = 'Allocated but not Delivered' where sn.name = (select se.serial_no from `tabDelivery Note Item` se where se.parent = %s)""", (record.name))
+		
+	record.cancel()
+	frappe.db.commit()
+
+@frappe.whitelist()
+def make_delivervehicle_stock_entry(serial_no,source_warehouse):
+
+	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.parent = se.name and sd.serial_no = %(string1)s and se.purpose = 'Material Issue' and sd.s_warehouse = %(string2)s """, {'string1': serial_no, 'string2': source_warehouse})
+	if records:
+		return 'The stock entry for this serial no already exists'
+	
+	innerJson = ""
+	
+	record = frappe.get_doc("Serial No", serial_no)
+	if record:
+		item = record.item_code
+		at_warehouse = record.warehouse
+		veh_status = record.vehicle_status
+		company = record.company
+
+	if at_warehouse != source_warehouse:
+		message = "The vehicle with serial no {} is not present in the warehouse {} for it to be delivered. Cannot make a stock entry".format(serial_no,source_warehouse)
+		return message
+
+	if item:
+		item_record = frappe.get_doc("Item", item)
+
+	
+	newJson = {
+		"company": company,
+		"doctype": "Stock Entry",
+		"title": "Material Issue",
+		"purpose": "Material Issue",
+		"items": [
+		]
+	}
+		
+	req_qty = 1
+	allowzero_valuation = True
+	innerJson =	{
+				"doctype": "Stock Entry Detail",
+				"item_code": item,
+				"description": item_record.description,
+				"uom": item_record.stock_uom,
+				"qty": req_qty,
+				"serial_no": serial_no,
+				"s_warehouse":source_warehouse,
+				"allow_zero_valuation_rate": allowzero_valuation
+			  }
+		
+	newJson["items"].append(innerJson)
+	
+	doc = frappe.new_doc("Stock Entry")
+	doc.update(newJson)
+	doc.save()
+	frappe.db.commit()
+	return doc.name
+
+@frappe.whitelist()
+def submit_deliver_vehicle_stock_entry(serial_no):
+	
+	new_status = "Delivered"
+	records = frappe.db.sql("""select sd.parent from `tabStock Entry Detail` sd, `tabStock Entry` se where sd.serial_no = %s and se.docstatus = 0 and sd.parent = se.name""", (serial_no))
+	
+	record = frappe.get_doc("Stock Entry", records[0][0])
+	if record:
+		name = record.name
+		frappe.db.sql("""update `tabSerial No` sn set vehicle_status = %(string1)s where sn.name = (select se.serial_no from `tabStock Entry Detail` se where se.parent = %(string2)s)""", {'string1': new_status, 'string2': name})
+		
+		record.submit()
+		frappe.db.commit()
+		returnmsg = "Submitted the stock entry {} successfully!".format(record.name)
+		return returnmsg
+#################################Uma's methods to create the QR follow here###############################################################
 @frappe.whitelist()
 def make_text_file(frm):
 	qr_record = frappe.get_doc("QR Code", frm)

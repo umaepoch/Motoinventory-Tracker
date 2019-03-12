@@ -89,6 +89,16 @@ fixtures = ["Custom Field",
 #	}
 # }
 
+doc_events = {
+	"User Access Information Document": {
+						"on_submit": "motoinventory_tracker.api.reset_default_valuesUAID"
+						
+					     },
+	"Access Control Document":{
+					"on_submit": "motoinventory_tracker.api.reset_defaults_ACD"
+				  }
+	     }
+
 # Scheduled Tasks
 # ---------------
 
